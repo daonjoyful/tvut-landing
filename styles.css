@@ -16,3 +16,5 @@ body{background:#fbfcff;color:#17204a}
 .channel-cta{background:linear-gradient(135deg,#263b91,#6043b9)}
 .channel-cta .eyebrow{color:#cdd5ff}
 .disclaimer{background:#f3f5fb}
+
+.footer{background:#111a3b;color:#c8d0ee;width:100%;max-width:none;padding:48px max(24px,calc((100% - 1120px)/2))}.footer b{color:#fff}.footer p{color:#aeb8da}.footer .copyright{color:#8995bd}.footer a{color:#d8ddff}
