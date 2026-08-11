@@ -9,6 +9,7 @@
 @media(max-width:760px){.review-article section h2{margin-top:34px;padding:12px 14px 12px 17px;font-size:21px}}
 .review-cover{display:block;width:100%;max-height:360px;object-fit:cover;border-radius:16px;margin:20px 0 24px;background:#f4f6fb}
 .review-intro{margin:28px 0 30px;padding:24px 26px;border:1px solid #b7e6df;border-left:5px solid #16a394;border-radius:16px;background:linear-gradient(135deg,#effcf9,#f5fbff);color:var(--ink);font-size:17px!important;line-height:1.9;font-weight:500;white-space:pre-line;box-shadow:0 4px 18px rgba(22,163,148,.12)}
+.review-article.amplaza .review-intro{border-color:#f2c56b;border-left-color:#e9a72b;background:linear-gradient(135deg,#fffaf0,#fffdf8);box-shadow:0 4px 18px rgba(233,167,43,.12)}
 .review-article section p{margin:0 0 1.25em}
 .review-article section p+p{margin-top:1.25em}
 @media(max-width:760px){.review-intro{margin:22px 0 26px;padding:18px 17px;font-size:16px!important;line-height:1.85}.review-article section p{margin-bottom:1.15em}.review-article section p+p{margin-top:1.15em}}
