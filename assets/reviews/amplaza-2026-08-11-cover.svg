@@ -1,0 +1,16 @@
+Exit code: 0
+Wall time: 0.6 seconds
+Output:
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">아침마당 88년생 용띠들의 세대 공감</title>
+  <desc id="desc">아침마당 2026년 8월 11일 방송 리뷰 대표 이미지</desc>
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fffaf0"/><stop offset="1" stop-color="#eef4ff"/></linearGradient><linearGradient id="wave" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#3867ff"/><stop offset="1" stop-color="#e7ae3e"/></linearGradient></defs>
+  <rect width="1200" height="675" rx="28" fill="url(#bg)"/>
+  <circle cx="1010" cy="170" r="190" fill="#e7ae3e" opacity=".12"/><circle cx="1040" cy="210" r="145" fill="none" stroke="#c9932e" stroke-width="5" opacity=".55"/>
+  <path d="M820 570c85-120 125-250 45-340 90 40 155 122 125 212 62-52 93-111 86-176 65 105 54 221-34 304z" fill="#18325a"/><path d="M890 315c55-35 105-34 143 1-53 14-97 47-125 91-25-26-31-59-18-92z" fill="#3867ff"/><path d="M955 310l52-56m-15 87l72-35m-92 73l87 8" stroke="#e7ae3e" stroke-width="12" stroke-linecap="round"/>
+  <path d="M0 600c205-95 368 88 590-12 204-92 334 77 610-24v111H0z" fill="url(#wave)" opacity=".9"/><path d="M0 620c210-94 375 70 595-20 205-84 340 66 605-27" fill="none" stroke="#fff" stroke-width="7" opacity=".45"/>
+  <g fill="#18325a" font-family="Arial,'Noto Sans KR',sans-serif"><text x="78" y="124" font-size="42" font-weight="800">아침마당</text><text x="78" y="245" font-size="76" font-weight="800">88년생 <tspan fill="#c9932e">용띠들의</tspan></text><text x="78" y="330" font-size="76" font-weight="800">세대 공감</text></g>
+  <rect x="82" y="390" width="330" height="58" rx="29" fill="#f26b4f"/><text x="112" y="429" fill="#fff" font-family="Arial,'Noto Sans KR',sans-serif" font-size="28" font-weight="700">2026.08.11 방송 리뷰</text>
+  <g fill="#fff" opacity=".85"><circle cx="710" cy="470" r="34"/><circle cx="770" cy="430" r="24"/><circle cx="820" cy="480" r="30"/></g>
+</svg>
+
