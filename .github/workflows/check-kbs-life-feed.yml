@@ -1,0 +1,22 @@
+name: Check official KBS review candidates
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '30 0 * * *'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Collect recent official videos
+        run: node scripts/kbs-life-feed.mjs > kbs-review-candidates.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kbs-review-candidates
+          path: kbs-review-candidates.json
+
