@@ -1,4 +1,4 @@
-name: Publish verified review
+﻿name: Publish verified review
 
 on:
   workflow_dispatch:
@@ -19,6 +19,8 @@ jobs:
         with:
           node-version: 20
       - name: Generate review pages
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         shell: bash
         run: |
           shopt -s nullglob
@@ -37,3 +39,4 @@ jobs:
           git add review
           git diff --cached --quiet || git commit -m "Publish verified broadcast review"
           git push
+
