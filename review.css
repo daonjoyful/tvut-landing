@@ -9,3 +9,5 @@ Output:
 .review-article::before{content:"";display:block;width:100%;aspect-ratio:16/9;margin:0 0 30px;border:1px solid #eadfca;border-radius:18px;background:#fffaf0 url("assets/reviews/amplaza-2026-08-11-cover.png") center/cover no-repeat;box-shadow:0 4px 20px rgba(21,32,51,.08)}
 @media(max-width:760px){.review-article section h2{margin-top:34px;padding:12px 14px 12px 17px;font-size:21px}}
 
+
+.review-cover{margin:28px 0 30px;border:1px solid #eadfca;border-radius:18px;overflow:hidden;background:#fffaf0;box-shadow:0 4px 20px rgba(21,32,51,.08)}.review-cover img{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover}.review-cover figcaption{padding:10px 16px;color:var(--muted);font-size:13px;text-align:center}.review-actions{display:flex!important;visibility:visible!important;opacity:1!important;gap:12px;flex-wrap:wrap;margin:26px 0}.review-actions .review-button{display:inline-flex!important;visibility:visible!important}
