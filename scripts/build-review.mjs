@@ -27,6 +27,7 @@ const html = `<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta n
 const outDir = path.join('review', config.slug, item.broadcastDate);
 await fs.mkdir(outDir, { recursive: true });
 const finalHtml = html
+  .replace(/<a class="review-button" href="[^"]*"[^>]*>[^<]*<\/a>/, '<a class="review-button content" href="/" rel="noopener">복지·건강·생활정보 보기</a>')
   .replace('<article class="review-article">', `<article class="review-article ${config.slug}">`)
   .replace('</h1>', '</h1><img class="review-cover" src="../../../assets/review-reallive.svg" alt="2TV 생생정보 방송 리뷰 대표 이미지">')
   .replace(/ · 공식 자막을 바탕으로 작성/g, '')
