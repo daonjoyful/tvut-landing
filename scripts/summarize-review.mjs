@@ -7,6 +7,8 @@ if (!process.env.OPENAI_API_KEY) throw new Error('OPENAI_API_KEY is required for
 const item = JSON.parse(await fs.readFile(file, 'utf8'));
 const prompt = `Write an original Korean broadcast review from the transcript below. Never copy dialogue verbatim. Do not invent names, locations, prices, medical claims, or facts that are not supported by the transcript. The review must be useful to readers aged 65 and older. Return only JSON with this shape: {"intro":"2 short paragraphs separated by a blank line","sections":[{"heading":"a concise factual topic heading","paragraphs":["one paragraph of 3-4 lines","another paragraph of 3-4 lines"]}],"audiencePoint":"one practical viewing point"}. Create 2 to 5 sections. Each heading must summarize the section topic, not use labels like '주요 내용 1'. Keep the tone factual and readable.
 
+Use 해요체 consistently throughout the intro, headings, and body. Do not use 반말체, 합니다체, or mixed honorific styles.
+
 Program: ${item.program}
 Broadcast date: ${item.broadcastDate}
 Transcript:

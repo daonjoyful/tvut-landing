@@ -27,6 +27,10 @@ const html = `<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta n
 const outDir = path.join('review', config.slug, item.broadcastDate);
 await fs.mkdir(outDir, { recursive: true });
 const finalHtml = html
+  .replace(/합니다/g, '해요')
+  .replace(/하세요/g, '해요')
+  .replace(/있습니다/g, '있어요')
+  .replace(/됩니다/g, '돼요')
   .replace(/<a class="review-button" href="[^"]*"[^>]*>[^<]*<\/a>/, '<a class="review-button content" href="/" rel="noopener">복지·건강·생활정보 보기</a>')
   .replace('<article class="review-article">', `<article class="review-article ${config.slug}">`)
   .replace('</h1>', '</h1><img class="review-cover" src="../../../assets/review-reallive.svg" alt="2TV 생생정보 방송 리뷰 대표 이미지">')
