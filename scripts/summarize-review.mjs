@@ -12,15 +12,16 @@ Broadcast date: ${item.broadcastDate}
 Transcript:
 ${item.transcript}`;
 
-const response = await fetch('https://api.openai.com/v1/responses', {
-  method: 'POST',
-  headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
-  body: JSON.stringify({
-    model: 'gpt-4.1-mini',
-    input: prompt,
-    text: { format: { type: 'json_object' } }
-  })
-});
+let response;
+for (let attempt = 1; attempt <= 3; attempt++) {
+  response = await fetch('https://api.openai.com/v1/responses', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
+    body: JSON.stringify({ model: 'gpt-4.1-mini', input: prompt, text: { format: { type: 'json_object' } } })
+  });
+  if (response.ok || ![500, 502, 503, 504].includes(response.status)) break;
+  await new Promise(resolve => setTimeout(resolve, attempt * 5000));
+}
 if (!response.ok) throw new Error(`OpenAI request failed: ${response.status} ${await response.text()}`);
 const data = await response.json();
 const text = data.output?.flatMap(x => x.content ?? []).find(x => x.type === 'output_text')?.text ?? '';
