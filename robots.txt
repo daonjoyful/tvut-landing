@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://tvut.3678dairy.com/sitemap.xml
