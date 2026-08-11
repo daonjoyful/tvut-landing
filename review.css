@@ -10,3 +10,5 @@
 .review-article section p+p{margin-top:1.15em}
 
 .review-intro{position:relative;margin:30px 0;padding:34px 24px 22px;border:1px solid #f1d79b;border-top:4px solid #e7ae3e;border-radius:14px;background:#fffaf0;color:#5a4630;font-size:17px;line-height:1.85;font-weight:600;box-shadow:0 4px 18px rgba(173,124,35,.08)}.review-intro::before{content:'방송 요약';position:absolute;top:10px;left:24px;color:#a66b08;font-size:12px;font-weight:800;letter-spacing:.08em}.review-intro p{margin:0}.review-intro p+p{margin-top:1em}
+
+.review-button.guide{background:#f26b4f;color:#fff;box-shadow:0 6px 16px rgba(242,107,79,.22)}.review-button.guide:hover{background:#dc573d}
