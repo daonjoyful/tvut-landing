@@ -6,6 +6,7 @@ on:
     paths:
       - 'content/review-inbox/*.json'
       - 'scripts/build-review.mjs'
+      - 'scripts/generate-review-cover.mjs'
 
 permissions:
   contents: write
@@ -24,11 +25,11 @@ jobs:
           shopt -s nullglob
           files=(content/review-inbox/transcript-*.json)
           if [ ${#files[@]} -eq 0 ]; then echo "No review input found"; exit 0; fi
-          for file in "${files[@]}"; do node scripts/build-review.mjs "$file"; done
+          for file in "${files[@]}"; do node scripts/generate-review-cover.mjs "$file"; node scripts/build-review.mjs "$file"; done
       - name: Commit generated reviews
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add review
+          git add review assets/reviews
           git diff --cached --quiet || git commit -m "Publish verified broadcast review"
           git push
