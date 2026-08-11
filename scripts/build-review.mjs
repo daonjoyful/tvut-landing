@@ -27,6 +27,7 @@ const html = `<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta n
 const outDir = path.join('review', config.slug, item.broadcastDate);
 await fs.mkdir(outDir, { recursive: true });
 const finalHtml = html
+  .replace(/<footer class="review-footer">[\s\S]*?<\/footer>/, '<section class="review-disclaimer-band"><div class="review-wrap review-disclaimer"><strong>안내</strong><p>이 사이트는 KBS 또는 티벗의 공식 사이트가 아니며, 티벗 앱과 방송 참여 방법을 안내하는 정보 제공 목적의 페이지입니다. 방송 일정·참여 방법·이벤트·경품 정보는 공식 방송 및 앱 공지를 기준으로 확인해 주세요.</p><p><span class="footer-badge">▣ TV 및 프로그램</span></p><p>KBS 및 티벗 관련 상표와 콘텐츠의 권리는 각 권리자에게 있어요.</p></div></section><footer class="review-footer"><div class="review-wrap review-footer-info"><div class="review-footer-business"><strong>일상팔레트</strong><p>티벗 퀴즈 이용 방법 안내 페이지</p></div><div class="review-footer-business"><p>상호명: 일상팔레트 · 대표자: 최선봉</p><p>사업자등록번호: 329-02-01980</p><p>경기도 용인시 수지구 호수로24번길 27 (고기동)</p></div><div class="review-footer-business"><small>© 2025 일상팔레트. All rights reserved.</small></div></div></footer>')
   .replace(/합니다/g, '해요')
   .replace(/하세요/g, '해요')
   .replace(/있습니다/g, '있어요')

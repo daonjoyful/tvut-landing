@@ -6,6 +6,7 @@
 .review-button:first-child{background:#f05a47;box-shadow:0 5px 14px rgba(240,90,71,.18)}
 .review-button.guide{background:#159a8c;box-shadow:0 5px 14px rgba(21,154,140,.18)}
 .review-button:hover{filter:brightness(.94)}
+.review-disclaimer-band{padding:28px 0;background:#f4f7ff;color:#52627a;border-top:1px solid #dce5f5}.review-disclaimer{font-size:13px;line-height:1.7}.review-disclaimer strong{display:block;margin-bottom:8px;color:var(--navy)}.review-disclaimer p{margin:4px 0}.footer-badge{display:inline-block;padding:2px 8px;border-radius:999px;background:#2867d9;color:#fff;font-weight:700}.review-footer-info{display:grid;grid-template-columns:1fr 1.5fr 1fr;gap:24px;align-items:center}.review-footer-business p{margin:4px 0}.review-footer-business small{color:#dce8ff}@media(max-width:760px){.review-footer-info{grid-template-columns:1fr;gap:12px}}
 @media(max-width:760px){.review-article section h2{margin-top:34px;padding:12px 14px 12px 17px;font-size:21px}}
 .review-cover{display:block;width:100%;max-height:360px;object-fit:cover;border-radius:16px;margin:20px 0 24px;background:#f4f6fb}
 .review-intro{margin:28px 0 30px;padding:24px 26px;border:1px solid #b7e6df;border-left:5px solid #16a394;border-radius:16px;background:linear-gradient(135deg,#effcf9,#f5fbff);color:var(--ink);font-size:17px!important;line-height:1.9;font-weight:500;white-space:pre-line;box-shadow:0 4px 18px rgba(22,163,148,.12)}
