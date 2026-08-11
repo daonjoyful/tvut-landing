@@ -29,3 +29,6 @@ body{background:#fbfcff;color:#17204a}
 .button{min-height:48px;border-radius:999px}.media-link{align-self:flex-start;display:inline-flex!important;align-items:center;min-height:44px;padding:0 16px;border-radius:999px;background:#ffffff45;color:inherit;transition:background .17s,transform .17s}.media-card:hover .media-link{background:#ffffff66;transform:translateX(2px)}.media-card.kakao-card .media-link{background:#ffe500;color:#2b2400}.program-grid .text-link{display:inline-flex!important;align-items:center;min-height:42px;padding:0 15px;border-radius:999px;background:#ffffff70;color:#34408e}.program-grid .text-link:hover{background:#fff}
 
 @media(max-width:760px){.media-grid{grid-template-columns:1fr!important;gap:14px}.media-card{min-height:210px!important;padding:22px}.media-card strong{font-size:23px;white-space:normal;word-break:keep-all}.media-card p{font-size:14px;white-space:normal;word-break:keep-all}.media-link{font-size:13px}.kakao-preview{width:100%;height:92px;margin:0 0 14px}.hero{padding-left:16px;padding-right:16px}.hero h1{font-size:39px}}
+
+.section-note{margin:-8px 0 18px;color:#74809a;font-size:13px;line-height:1.6}
+@media (max-width:640px){.section-note{font-size:12px;margin:-4px 0 14px}}
