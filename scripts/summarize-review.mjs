@@ -28,6 +28,7 @@ const text = data.output?.flatMap(x => x.content ?? []).find(x => x.type === 'ou
 const parsed = JSON.parse(text.replace(/^```json\s*|\s*```$/g, '').trim());
 if (!parsed.intro || !Array.isArray(parsed.sections) || parsed.sections.length < 2) throw new Error('AI summary structure is invalid');
 if (parsed.sections.some(section => !section.heading || !Array.isArray(section.paragraphs) || section.paragraphs.length < 1)) throw new Error('AI section structure is invalid');
-const out = { ...item, generatedIntro: parsed.intro, generatedSections: parsed.sections, audiencePoint: parsed.audiencePoint ?? '', summary: parsed.intro };
+const generatedSummary = [parsed.intro, ...parsed.sections.flatMap(section => section.paragraphs ?? []), parsed.audiencePoint ?? ''].join('\n\n');
+const out = { ...item, generatedIntro: parsed.intro, generatedSections: parsed.sections, audiencePoint: parsed.audiencePoint ?? '', summary: generatedSummary };
 await fs.writeFile(file, JSON.stringify(out, null, 2) + '\n', 'utf8');
 console.log(`AI summary generated: ${file}`);
