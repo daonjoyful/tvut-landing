@@ -156,7 +156,7 @@
 
 
     <section class="section wrap" id="life-info">
-      <div class="section-heading"><p class="eyebrow">10 · 함께 보는 생활정보</p><h2>티벗 퀴즈 이용자를 위한 생활 콘텐츠</h2><p>메인은 티벗 퀴즈 안내로 유지하고, 방송을 즐겨보는 분들에게 유용한 정보만 보조 콘텐츠로 연결합니다.</p></div>
+      <div class="section-heading"><p class="eyebrow">02 · 함께 보는 생활정보</p><h2>티벗 퀴즈 이용자를 위한 생활 콘텐츠</h2><p>메인은 티벗 퀴즈 안내로 유지하고, 방송을 즐겨보는 분들에게 유용한 정보만 보조 콘텐츠로 연결합니다.</p></div>
       <div class="program-grid life-grid">
         <article><span class="program-label">복지·지원금</span><h3>놓치기 쉬운 복지 혜택</h3><p>기초연금, 의료비, 에너지·생활 지원 등 연령과 가구 조건에 따라 달라지는 제도를 공식 기관 기준으로 확인합니다.</p><a class="text-link" href="https://www.bokjiro.go.kr/" target="_blank" rel="noopener">복지로 확인하기 →</a></article>
         <article><span class="program-label">건강정보</span><h3>매일 실천하는 건강관리</h3><p>혈압·혈당 관리, 검진, 식생활 등 건강 정보를 소개합니다. 증상이 있거나 치료 중이라면 의료진 상담을 우선하세요.</p><a class="text-link" href="https://health.kdca.go.kr/" target="_blank" rel="noopener">건강정보 확인하기 →</a></article>
@@ -171,5 +171,18 @@
   </main>
   <section class="disclaimer"><div class="wrap"><strong>안내</strong><p>이 사이트는 KBS 또는 티벗의 공식 사이트가 아니며, 티벗 앱과 방송 참여 방법을 안내하는 정보 제공 목적의 페이지입니다. 방송 일정·참여 방법·이벤트·경품 정보는 공식 방송 및 앱 공지를 기준으로 확인해 주세요.</p><p>KBS 및 티벗 관련 상표와 콘텐츠의 권리는 각 권리자에게 있습니다.</p></div></section>
   <footer class="footer wrap"><div><b>일상팔레트</b><p>티벗 퀴즈 이용 방법 안내 페이지</p></div><div><p>상호명: 일상팔레트 · 대표자: 최선봉</p><p>사업자등록번호: 329-02-01980</p><p>경기도 용인시 수지구 호수로24번길 27 (고기동)</p></div><p class="copyright">© 2025 일상팔레트. All rights reserved.</p></footer>
+<script>
+  (() => {
+    const order = ['install','quiz','programs','replay','faq','guide','program-guide','tips','resources'];
+    order.forEach((id, index) => {
+      const section = document.getElementById(id);
+      const label = section?.querySelector('.eyebrow');
+      if (label) label.textContent = `${String(index + 3).padStart(2, '0')} · ${label.textContent.replace(/^\d+\s*·\s*/, '')}`;
+    });
+    const life = document.getElementById('life-info');
+    const lifeLabel = life?.querySelector('.eyebrow');
+    if (lifeLabel) lifeLabel.textContent = '02 · 함께 보는 생활정보';
+  })();
+</script>
 </body>
 </html>
