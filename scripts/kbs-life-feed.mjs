@@ -2,10 +2,16 @@ const feedUrl = 'https://www.youtube.com/feeds/videos.xml?channel_id=UCHlSeJxRIX
 const allowed = ['아침마당', '2TV 생생정보', '무엇이든 물어보세요'];
 const standardAgeDays = 7;
 const evergreenAgeDays = 14;
-const evergreenTerms = ['건강', '복지', '지원금', '연금', '주거', '운동', '질환', '검진', '노후', '생활정보', '치료', '정책'];
+const evergreenTerms = ['건강', '복지', '지원금', '연금', '주거', '운동', '지방', '검진', '노후', '생활정보', '치료', '정책'];
 
-const response = await fetch(feedUrl);
-if (!response.ok) throw new Error(`RSS fetch failed: ${response.status}`);
+let response;
+for (let attempt = 1; attempt <= 3; attempt += 1) {
+  response = await fetch(feedUrl, { headers: { 'user-agent': 'tvut-review-bot/1.0' } });
+  if (response.ok) break;
+  if (attempt < 3) await new Promise(resolve => setTimeout(resolve, attempt * 1500));
+}
+if (!response?.ok) throw new Error(`RSS fetch failed after 3 attempts: ${response?.status ?? 'no response'}`);
+
 const xml = await response.text();
 const entries = [...xml.matchAll(/<entry>([\s\S]*?)<\/entry>/g)].map(match => match[1]);
 const clean = value => value.replace(/<!\[CDATA\[|\]\]>/g, '').replace(/&amp;/g, '&').replace(/&#39;/g, "'").replace(/&quot;/g, '"').trim();
