@@ -63,3 +63,7 @@ body{background:linear-gradient(180deg,#f2f4ff 0%,#fff8f4 48%,#eefaf7 100%)}
 .header-channel{min-height:48px;padding:0 20px;display:inline-flex;align-items:center;font-size:15px}
 .media-link,.program-grid .text-link{min-height:52px;padding:0 22px;font-size:15px}
 @media(max-width:760px){.hero-actions .button{min-height:56px;padding:0 22px;font-size:15px}.media-link,.program-grid .text-link{min-height:50px;padding:0 18px;font-size:14px}.header-channel{min-height:46px;padding:0 16px}}
+
+
+/* Keep the detailed program 안내 section below the primary conversion blocks. */
+main>#programs{order:7}
