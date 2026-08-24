@@ -71,3 +71,12 @@ main>.channel-cta{order:3}
 main>#resources{order:4}
 main>#life-info{order:5}
 main>#install,main>#quiz,main>#replay,main>#faq,main>#guide,main>#program-guide,main>#tips{order:6}
+
+
+/* Keep detailed program-by-program guidance near the top as requested. */
+main>#programs{order:2}
+main>#program-guide{order:3}
+main>.channel-cta{order:4}
+main>#resources{order:5}
+main>#life-info{order:6}
+main>#install,main>#quiz,main>#replay,main>#faq,main>#guide,main>#tips{order:7}
