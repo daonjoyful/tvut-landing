@@ -190,7 +190,7 @@
   <footer class="footer wrap"><div><b>일상팔레트</b><p>티벗 퀴즈 이용 방법 안내 페이지</p></div><div><p>상호명: 일상팔레트 · 대표자: 최선봉</p><p>사업자등록번호: 329-02-01980</p><p>경기도 용인시 수지구 호수로24번길 27 (고기동)</p></div><p class="copyright">© 2025 일상팔레트. All rights reserved.</p></footer>
 <script>
   (() => {
-    const order = ['install','quiz','programs','replay','faq','guide','program-guide','tips','resources'];
+    const order = ['programs','program-guide','resources','life-info','install','quiz','replay','faq','guide','tips'];
     order.forEach((id, index) => {
       const section = document.getElementById(id);
       const label = section?.querySelector('.eyebrow');
@@ -198,7 +198,6 @@
     });
     const life = document.getElementById('life-info');
     const lifeLabel = life?.querySelector('.eyebrow');
-    if (lifeLabel) lifeLabel.textContent = '02 · 함께 보는 생활정보';
   })();
 </script>
 
