@@ -203,14 +203,18 @@
 
 <script>
   document.addEventListener("click", function (event) {
-    const link = event.target.closest('a[href*="pf.kakao.com"]');
-    if (link && typeof gtag === "function") {
-      gtag("event", "kakao_channel_click", {
-        link_url: link.href,
-        link_text: (link.textContent || "").trim(),
-        transport_type: "beacon"
-      });
-    }
+    const link = event.target.closest("a[href]");
+    if (!link || typeof gtag !== "function") return;
+    const href = link.href || "";
+    let eventName = "";
+    if (href.includes("pf.kakao.com")) eventName = "kakao_channel_click";
+    else if (href.includes("m.site.naver.com")) eventName = "tvut_install_click";
+    else if (href.includes("amplaza")) eventName = "broadcast_amplaza_click";
+    else if (href.includes("reallive")) eventName = "broadcast_reallive_click";
+    else if (href.includes("whatever")) eventName = "broadcast_whatever_click";
+    else if (href.startsWith("tel:")) eventName = "phone_click";
+    else if (href.includes("daonjoyful.com")) eventName = "wordpress_article_click";
+    if (eventName) gtag("event", eventName, {link_url: href, link_text: (link.textContent || "").trim(), transport_type: "beacon"});
   });
 </script>
 </body>
