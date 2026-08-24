@@ -52,3 +52,14 @@ main>.channel-cta{order:3}
 main>#resources{order:4}
 main>#life-info{order:5}
 main>#install,main>#quiz,main>#replay,main>#faq,main>#guide,main>#program-guide,main>#tips{order:6}
+
+
+/* Improve homepage visual color and senior-friendly touch targets. */
+body{background:linear-gradient(180deg,#f2f4ff 0%,#fff8f4 48%,#eefaf7 100%)}
+.site-header{background:rgba(255,255,255,.92)}
+.hero{background:linear-gradient(135deg,#e9edff 0%,#f7efff 52%,#e6faf4 100%)}
+.trust-strip{background:linear-gradient(90deg,#e6ebff,#f4efff,#e8f8f2)}
+.hero-actions .button{min-height:58px;padding:0 28px;font-size:16px}
+.header-channel{min-height:48px;padding:0 20px;display:inline-flex;align-items:center;font-size:15px}
+.media-link,.program-grid .text-link{min-height:52px;padding:0 22px;font-size:15px}
+@media(max-width:760px){.hero-actions .button{min-height:56px;padding:0 22px;font-size:15px}.media-link,.program-grid .text-link{min-height:50px;padding:0 18px;font-size:14px}.header-channel{min-height:46px;padding:0 16px}}
