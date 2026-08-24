@@ -65,5 +65,9 @@ body{background:linear-gradient(180deg,#f2f4ff 0%,#fff8f4 48%,#eefaf7 100%)}
 @media(max-width:760px){.hero-actions .button{min-height:56px;padding:0 22px;font-size:15px}.media-link,.program-grid .text-link{min-height:50px;padding:0 18px;font-size:14px}.header-channel{min-height:46px;padding:0 16px}}
 
 
-/* Keep the detailed program 안내 section below the primary conversion blocks. */
-main>#programs{order:7}
+/* Place broadcast quiz guidance directly below the recommended shortcut cards. */
+main>#programs{order:2}
+main>.channel-cta{order:3}
+main>#resources{order:4}
+main>#life-info{order:5}
+main>#install,main>#quiz,main>#replay,main>#faq,main>#guide,main>#program-guide,main>#tips{order:6}
