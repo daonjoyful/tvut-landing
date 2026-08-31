@@ -121,19 +121,29 @@
       }
       .regions {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 9px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
       }
       .region {
-        padding: 15px 11px;
-        border: 1px solid #d7e3f0;
-        border-radius: 10px;
-        background: #fff;
+        padding: 20px 16px;
+        border: 1px solid #b8d4f3;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #ffffff 0%, #edf6ff 100%);
         text-decoration: none;
-        color: #124c91;
-        box-shadow: 0 3px 0 #d7e3f0;
+        color: #0759bd;
+        box-shadow: 0 5px 0 #b9cee7, 0 8px 14px rgba(24, 91, 160, .12);
         font-weight: 800;
-        font-size: 14px;
+        font-size: 15px;
+        transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+      }
+      .region:hover {
+        transform: translateY(-3px);
+        background: linear-gradient(135deg, #fffdf0 0%, #fff2b8 100%);
+        box-shadow: 0 8px 0 #d7a900, 0 12px 18px rgba(24, 91, 160, .18);
+      }
+      .region:active {
+        transform: translateY(3px);
+        box-shadow: 0 2px 0 #b9cee7;
       }
       .steps {
         padding: 0;
