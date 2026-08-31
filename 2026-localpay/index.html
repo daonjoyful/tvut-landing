@@ -60,20 +60,37 @@
       }
       .btn {
         display: block;
-        padding: 16px 18px;
-        border-radius: 10px;
+        padding: 18px 18px;
+        border-radius: 12px;
         background: #1768c7;
         color: #fff;
         text-decoration: none;
         text-align: center;
         font-weight: 800;
-        box-shadow: 0 4px 0 #0b4389;
+        box-shadow: 0 6px 0 #0b4389, 0 10px 16px rgba(11, 67, 137, .2);
         margin-top: 16px;
+        transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+        cursor: pointer;
+      }
+      .btn:hover {
+        transform: translateY(-3px);
+        filter: brightness(1.06);
+        box-shadow: 0 9px 0 #0b4389, 0 14px 20px rgba(11, 67, 137, .24);
+      }
+      .btn:active {
+        transform: translateY(4px);
+        box-shadow: 0 2px 0 #0b4389, 0 4px 8px rgba(11, 67, 137, .14);
       }
       .yellow {
         background: #ffd338;
         color: #172a45;
-        box-shadow: 0 4px 0 #b88b00;
+        box-shadow: 0 6px 0 #b88b00, 0 10px 16px rgba(184, 139, 0, .2);
+      }
+      .yellow:hover {
+        box-shadow: 0 9px 0 #b88b00, 0 14px 20px rgba(184, 139, 0, .24);
+      }
+      .yellow:active {
+        box-shadow: 0 2px 0 #b88b00, 0 4px 8px rgba(184, 139, 0, .14);
       }
       .section {
         padding: 34px 28px;
