@@ -130,3 +130,10 @@ main>.channel-cta{order:10}
 /* Strengthen hero color while preserving text contrast. */
 .hero{background:linear-gradient(135deg,#dfe6ff 0%,#eee5ff 52%,#d9f4ed 100%)}
 .hero:before{background:#c9c7ff66}
+
+
+/* Strengthen primary actions and make the hero quiz card clickable. */
+.hero-actions .button{min-height:64px;padding:0 32px;font-size:18px}
+.hero-card{display:block;text-decoration:none;color:inherit;cursor:pointer}
+.hero-card:focus-visible{outline:4px solid #405cf5;outline-offset:5px}
+@media(max-width:760px){.hero-actions .button{min-height:60px;padding:0 26px;font-size:16px;width:100%}}
