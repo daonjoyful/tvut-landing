@@ -120,3 +120,8 @@ main>#faq{order:7}
 main>#guide{order:8}
 main>#tips{order:9}
 main>.channel-cta{order:10}
+
+
+/* Enlarge the bottom Kakao channel CTA button. */
+.channel-cta .button.light{min-height:64px;padding:0 34px;font-size:18px;gap:22px}
+@media(max-width:760px){.channel-cta .button.light{min-height:58px;padding:0 28px;font-size:16px;width:100%}}
