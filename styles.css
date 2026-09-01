@@ -80,3 +80,12 @@ main>.channel-cta{order:4}
 main>#resources{order:5}
 main>#life-info{order:6}
 main>#install,main>#quiz,main>#replay,main>#faq,main>#guide,main>#tips{order:7}
+
+
+/* Final layout correction: program guide before programs, with tighter responsive spacing. */
+main>#program-guide{order:2}
+main>#programs{order:3}
+.section{padding-top:68px;padding-bottom:68px}
+.ad-section{padding-top:8px;padding-bottom:18px;min-height:72px}
+.review-promo{margin-bottom:68px}
+@media(max-width:760px){.section{padding-top:48px;padding-bottom:48px}.section-heading{margin-bottom:24px}.ad-section{padding-top:6px;padding-bottom:14px;min-height:56px}.review-promo{margin-bottom:48px}}
