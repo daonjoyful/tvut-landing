@@ -108,3 +108,15 @@ main>.channel-cta{order:12}
 
 /* Keep the homepage focused: compact guidance is already provided above, so hide long 01/02 detail blocks. */
 main>#install,main>#quiz{display:none!important}
+
+
+/* Move related information directly below broadcast quiz guidance. */
+main>#program-guide{order:2}
+main>#resources{order:3}
+main>#life-info{order:4}
+main>#programs{order:5}
+main>#replay{order:6}
+main>#faq{order:7}
+main>#guide{order:8}
+main>#tips{order:9}
+main>.channel-cta{order:10}
