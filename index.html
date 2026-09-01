@@ -13,6 +13,7 @@
     function gtag(){dataLayer.push(arguments);}
     gtag("js", new Date());
     gtag("config", "G-BRH84ZBQ1Q");
+    gtag("config", "G-YGT73PSTZD");
   </script>
   <!-- Cloudflare Web Analytics -->
   <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token":"bc827face37c4c36a98765017f3c8b62"}'></script>
@@ -207,7 +208,14 @@
     if (!link || typeof gtag !== "function") return;
     const href = link.href || "";
     let eventName = "";
-    if (href.includes("pf.kakao.com")) eventName = "kakao_channel_click";
+    if (href.includes("pf.kakao.com")) {
+      eventName = "kakao_channel_click";
+      gtag("event", "conversion", {
+        send_to: "AW-16557493278/prsiCO28leccEJ6Yndc9",
+        value: 1.0,
+        currency: "KRW"
+      });
+    }
     else if (href.includes("m.site.naver.com")) eventName = "tvut_install_click";
     else if (href.includes("amplaza")) eventName = "broadcast_amplaza_click";
     else if (href.includes("reallive")) eventName = "broadcast_reallive_click";
