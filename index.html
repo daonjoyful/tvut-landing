@@ -191,11 +191,11 @@
   <footer class="footer wrap"><div><b>일상팔레트</b><p>티벗 퀴즈 이용 방법 안내 페이지</p></div><div><p>상호명: 일상팔레트 · 대표자: 최선봉</p><p>사업자등록번호: 329-02-01980</p><p>경기도 용인시 수지구 호수로24번길 27 (고기동)</p></div><p class="copyright">© 2025 일상팔레트. All rights reserved.</p></footer>
 <script>
   (() => {
-    const order = ['program-guide','programs','resources','life-info','install','quiz','replay','faq','guide','tips'];
+    const order = ['install','quiz','program-guide','programs','replay','faq','guide','tips','resources','life-info'];
     order.forEach((id, index) => {
       const section = document.getElementById(id);
       const label = section?.querySelector('.eyebrow');
-      if (label) label.textContent = `${String(index + 3).padStart(2, '0')} · ${label.textContent.replace(/^\d+\s*·\s*/, '')}`;
+      if (label) label.textContent = `${String(index + 1).padStart(2, '0')} · ${label.textContent.replace(/^\d+\s*·\s*/, '')}`;
     });
     const programGuide = document.getElementById('program-guide');
     const programs = document.getElementById('programs');
