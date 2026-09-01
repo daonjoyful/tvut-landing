@@ -104,3 +104,7 @@ main>#tips{order:9}
 main>#resources{order:10}
 main>#life-info{order:11}
 main>.channel-cta{order:12}
+
+
+/* Keep the homepage focused: compact guidance is already provided above, so hide long 01/02 detail blocks. */
+main>#install,main>#quiz{display:none!important}
