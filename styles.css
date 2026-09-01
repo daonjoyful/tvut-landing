@@ -89,3 +89,18 @@ main>#programs{order:3}
 .ad-section{padding-top:8px;padding-bottom:18px;min-height:72px}
 .review-promo{margin-bottom:68px}
 @media(max-width:760px){.section{padding-top:48px;padding-bottom:48px}.section-heading{margin-bottom:24px}.ad-section{padding-top:6px;padding-bottom:14px;min-height:56px}.review-promo{margin-bottom:48px}}
+
+
+/* Final sequential homepage order. */
+main>#media{order:1}
+main>#install{order:2}
+main>#quiz{order:3}
+main>#program-guide{order:4}
+main>#programs{order:5}
+main>#replay{order:6}
+main>#faq{order:7}
+main>#guide{order:8}
+main>#tips{order:9}
+main>#resources{order:10}
+main>#life-info{order:11}
+main>.channel-cta{order:12}
