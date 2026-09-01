@@ -192,10 +192,10 @@
 <script>
   (() => {
     const order = ['install','quiz','program-guide','programs','replay','faq','guide','tips','resources','life-info'];
-    order.forEach((id, index) => {
+    order.forEach((id) => {
       const section = document.getElementById(id);
       const label = section?.querySelector('.eyebrow');
-      if (label) label.textContent = `${String(index + 1).padStart(2, '0')} · ${label.textContent.replace(/^\d+\s*·\s*/, '')}`;
+      if (label) label.textContent = label.textContent.replace(/^\\d+\\s*·\\s*/, '');
     });
     const programGuide = document.getElementById('program-guide');
     const programs = document.getElementById('programs');
