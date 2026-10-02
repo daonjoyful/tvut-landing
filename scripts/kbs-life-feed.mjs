@@ -1,19 +1,39 @@
 const feedUrl = 'https://www.youtube.com/feeds/videos.xml?channel_id=UCHlSeJxRIXZWMARC2oMwmcQ';
+const requestTimeoutMs = 15000;
+const maxAttempts = 6;
 const allowed = ['아침마당', '2TV 생생정보', '무엇이든 물어보세요'];
 const standardAgeDays = 7;
 const evergreenAgeDays = 14;
 const evergreenTerms = ['건강', '복지', '지원금', '연금', '주거', '운동', '지방', '검진', '노후', '생활정보', '치료', '정책'];
 
 let response;
-for (let attempt = 1; attempt <= 3; attempt += 1) {
-  response = await fetch(feedUrl, { headers: { 'user-agent': 'tvut-review-bot/1.0' } });
-  if (response.ok) break;
-  if (attempt < 3) await new Promise(resolve => setTimeout(resolve, attempt * 1500));
+let lastError = 'no response';
+for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), requestTimeoutMs);
+  try {
+    response = await fetch(feedUrl, {
+      headers: { 'user-agent': 'tvut-review-bot/1.0' },
+      signal: controller.signal,
+    });
+    if (response.ok) break;
+    lastError = `HTTP ${response.status}`;
+  } catch (error) {
+    lastError = error.name === 'AbortError' ? `timeout after ${requestTimeoutMs}ms` : error.message;
+  } finally {
+    clearTimeout(timeout);
+  }
+  if (attempt < maxAttempts) {
+    const delayMs = Math.min(15000, 2000 * 2 ** (attempt - 1));
+    console.warn(`RSS request attempt ${attempt}/${maxAttempts} failed (${lastError}); retrying in ${delayMs}ms`);
+    await new Promise(resolve => setTimeout(resolve, delayMs));
+  }
 }
-if (!response?.ok) throw new Error(`RSS fetch failed after 3 attempts: ${response?.status ?? 'no response'}`);
+if (!response?.ok) throw new Error(`RSS fetch failed after ${maxAttempts} attempts: ${lastError}`);
 
 const xml = await response.text();
 const entries = [...xml.matchAll(/<entry>([\s\S]*?)<\/entry>/g)].map(match => match[1]);
+if (entries.length === 0) throw new Error('RSS response contained no video entries');
 const clean = value => value.replace(/<!\[CDATA\[|\]\]>/g, '').replace(/&amp;/g, '&').replace(/&#39;/g, "'").replace(/&quot;/g, '"').trim();
 const tag = (entry, name) => clean(entry.match(new RegExp(`<${name}>([\\s\\S]*?)<\\/${name}>`))?.[1] ?? '');
 const now = Date.now();
