@@ -4,8 +4,15 @@ import path from 'node:path';
 const inputPath = process.argv[2];
 if (!inputPath) throw new Error('Usage: node scripts/build-review.mjs content/review-inbox/input.json');
 const item = JSON.parse(await fs.readFile(inputPath, 'utf8'));
-for (const key of ['program', 'broadcastDate', 'title', 'summary', 'transcript', 'officialUrl', 'videoUrl']) {
+for (const key of ['program', 'broadcastDate', 'title', 'transcript', 'officialUrl', 'videoUrl']) {
   if (!item[key]) throw new Error(`Missing required field: ${key}`);
+}
+
+// Older manually imported transcript files do not contain summary. The review
+// page is built from the transcript, so do not fail the whole scheduled job
+// just because that optional handoff field is absent.
+if (!item.summary) {
+  item.summary = String(item.transcript).split(/\n{2,}/).map(x => x.trim()).filter(Boolean).slice(0, 2).join('\n\n') || item.title;
 }
 
 const esc = value => String(value).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
@@ -16,7 +23,14 @@ const programConfig = {
 };
 const config = programConfig[item.program] ?? { slug: 'other', headings: ['방송 주제와 출연자 이야기', '방송에서 다룬 구체적인 내용', '시청자가 확인할 정보', '방송 내용 정리'] };
 const generatedParagraphs = Array.isArray(item.generatedSections) ? item.generatedSections.flatMap(section => section.paragraphs ?? []) : [];
-const transcriptParagraphs = generatedParagraphs.length ? generatedParagraphs : String(item.transcript).split(/\n{2,}/).map(x => x.trim()).filter(Boolean);
+const rawTranscript = String(item.transcript).trim();
+let transcriptParagraphs = generatedParagraphs.length
+  ? generatedParagraphs
+  : rawTranscript.split(/\n{2,}|(?=\d{2}:\d{2}:\d{2}\s)/).map(x => x.trim()).filter(Boolean);
+if (transcriptParagraphs.length < 3 && rawTranscript.length >= 300) {
+  const chunkSize = Math.ceil(rawTranscript.length / 4);
+  transcriptParagraphs = Array.from({ length: 4 }, (_, index) => rawTranscript.slice(index * chunkSize, (index + 1) * chunkSize).trim()).filter(Boolean);
+}
 if (transcriptParagraphs.length < 3) throw new Error('Transcript is too short for a review');
 const sourceParagraphs = transcriptParagraphs.slice(0, 8);
 const intro = item.generatedIntro || sourceParagraphs[0];
