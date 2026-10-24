@@ -137,3 +137,6 @@ main>.channel-cta{order:10}
 .hero-card{display:block;text-decoration:none;color:inherit;cursor:pointer}
 .hero-card:focus-visible{outline:4px solid #405cf5;outline-offset:5px}
 @media(max-width:760px){.hero-actions .button{min-height:60px;padding:0 26px;font-size:16px;width:100%}}
+
+/* Page representative image, shared by the visible hero and Open Graph. */
+.guide-image-link{display:block;min-width:0;align-self:center}.guide-main-image{display:block;width:100%;height:auto;aspect-ratio:1200/630;border-radius:24px;background:#edf5ff}
