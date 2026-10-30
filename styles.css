@@ -139,4 +139,5 @@ main>.channel-cta{order:10}
 @media(max-width:760px){.hero-actions .button{min-height:60px;padding:0 26px;font-size:16px;width:100%}}
 
 /* Page representative image, shared by the visible hero and Open Graph. */
-.guide-image-link{display:block;min-width:0;align-self:center}.guide-main-image{display:block;width:100%;height:auto;aspect-ratio:1200/630;border-radius:24px;background:#edf5ff}
+.guide-image-link{position:relative;z-index:1;display:block;min-width:0;width:min(100%,380px);align-self:center;justify-self:center}.guide-main-image{display:block;width:100%;height:auto;aspect-ratio:1;object-fit:contain;border-radius:24px;background:#edf5ff}
+@media(max-width:760px){.guide-image-link{width:min(100%,280px)}.hero{row-gap:28px}.guide-main-image{border-radius:20px}}
