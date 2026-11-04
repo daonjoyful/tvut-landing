@@ -147,3 +147,7 @@ main>.ad-top{order:-1;padding-top:16px;padding-bottom:24px}
 main>.ad-middle{order:3}
 main>.ad-lower{order:8}
 .ad-section>.adsbygoogle{display:block;width:100%;min-width:0}
+
+/* Balanced four-program navigation. */
+.program-grid.program-grid-four{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:600px){.program-grid.program-grid-four{grid-template-columns:1fr}}

@@ -30,3 +30,13 @@
 .review-article .review-ad.wrap{width:100%}
 .review-ad.wrap>.adsbygoogle{display:block;width:100%;min-width:0}
 .review-ad.wrap>.ad-label{margin:0 0 10px;font-size:11px;line-height:1.5;color:#98a2b3}
+
+/* Six o'clock hometown guide and four-program hub. */
+.review-grid.review-grid-four{grid-template-columns:repeat(2,minmax(0,1fr))}
+.sixhour-shortcuts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:20px}
+.sixhour-shortcuts .review-button{justify-content:center;text-align:center;padding:12px 18px}
+.sixhour-toc{display:flex;flex-wrap:wrap;gap:10px;margin:28px 0}.sixhour-toc a{padding:10px 16px;border:1px solid #cce2d5;border-radius:999px;color:#175b3e;background:#f1faf4;text-decoration:none;font-weight:700}
+.sixhour-contact{padding:24px;border:1px solid #cce2d5;border-radius:16px;background:#f1faf4;margin:20px 0}.sixhour-phone{display:block;width:fit-content;font-size:clamp(24px,5vw,34px);font-weight:800;color:#175b3e;margin:8px 0 16px}.sixhour-contact p{margin:0!important}
+.sixhour-sources{font-size:14px}.sixhour-sources a{overflow-wrap:anywhere}.sixhour section[id]{scroll-margin-top:24px}
+.sixhour h1,.sixhour h2,.sixhour p,.sixhour li,.sixhour summary{word-break:keep-all;overflow-wrap:break-word}
+@media(max-width:760px){.sixhour-shortcuts,.review-grid.review-grid-four{grid-template-columns:1fr}.sixhour-contact{padding:18px}}
