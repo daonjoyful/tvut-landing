@@ -141,3 +141,9 @@ main>.channel-cta{order:10}
 /* Page representative image, shared by the visible hero and Open Graph. */
 .guide-image-link{position:relative;z-index:1;display:block;min-width:0;width:min(100%,380px);align-self:center;justify-self:center}.guide-main-image{display:block;width:100%;height:auto;aspect-ratio:1;object-fit:contain;border-radius:24px;background:#edf5ff}
 @media(max-width:760px){.guide-image-link{width:min(100%,280px)}.hero{row-gap:28px}.guide-main-image{border-radius:20px}}
+
+/* Separate manual ads with content; keep the first ad below the header. */
+main>.ad-top{order:-1;padding-top:16px;padding-bottom:24px}
+main>.ad-middle{order:3}
+main>.ad-lower{order:8}
+.ad-section>.adsbygoogle{display:block;width:100%;min-width:0}

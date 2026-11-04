@@ -24,3 +24,9 @@
 .review-article section p{margin:0 0 1.25em}
 .review-article section p+p{margin-top:1.25em}
 @media(max-width:760px){.review-intro{margin:22px 0 26px;padding:18px 17px;font-size:16px!important;line-height:1.85}.review-article section p{margin-bottom:1.15em}.review-article section p+p{margin-top:1.15em}}
+
+/* Responsive manual ad containers. */
+.review-ad.wrap{display:block;width:calc(100% - 32px);max-width:1080px;margin:28px auto;padding:12px 0 20px;text-align:center}
+.review-article .review-ad.wrap{width:100%}
+.review-ad.wrap>.adsbygoogle{display:block;width:100%;min-width:0}
+.review-ad.wrap>.ad-label{margin:0 0 10px;font-size:11px;line-height:1.5;color:#98a2b3}
