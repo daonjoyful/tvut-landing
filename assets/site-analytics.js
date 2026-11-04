@@ -47,5 +47,5 @@
       link_url: url.protocol === 'tel:' ? 'tel:' : url.origin + url.pathname,
       transport_type: 'beacon'
     });
-  });
+  }, { capture: true });
 })();
