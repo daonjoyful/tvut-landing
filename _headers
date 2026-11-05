@@ -1,3 +1,11 @@
 /2026-minsaeng-jiwonkeum-4cha-50man/*
   X-Robots-Tag: noindex, nofollow, noarchive
   Cache-Control: public, max-age=300
+
+/assets/revenue-app/*
+  Access-Control-Allow-Origin: *
+  Cache-Control: public, max-age=3600
+  X-Content-Type-Options: nosniff
+
+/assets/revenue-app/*.webmanifest
+  Content-Type: application/manifest+json

@@ -1,0 +1,15 @@
+{
+  "id":"https://ilsang-revenue-private.a01092133678.chatgpt.site/",
+  "name":"일상팔레트 수익 요약",
+  "short_name":"수익 요약",
+  "start_url":"https://ilsang-revenue-private.a01092133678.chatgpt.site/",
+  "scope":"https://ilsang-revenue-private.a01092133678.chatgpt.site/",
+  "display":"standalone",
+  "background_color":"#f5f7fa",
+  "theme_color":"#1967d2",
+  "icons":[
+    {"src":"https://tvut.3678dairy.com/assets/revenue-app/revenue-v2-192.png","sizes":"192x192","type":"image/png","purpose":"any"},
+    {"src":"https://tvut.3678dairy.com/assets/revenue-app/revenue-v2-512.png","sizes":"512x512","type":"image/png","purpose":"any"},
+    {"src":"https://tvut.3678dairy.com/assets/revenue-app/revenue-v2-maskable-512.png","sizes":"512x512","type":"image/png","purpose":"maskable"}
+  ]
+}
