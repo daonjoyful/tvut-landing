@@ -52,7 +52,7 @@ function respond(body, status = 200, extra = {}) {
     'Content-Type':'text/html; charset=utf-8', 'Cache-Control':'private, no-store',
     'X-Robots-Tag':'noindex, nofollow, noarchive', 'Referrer-Policy':'same-origin',
     'X-Frame-Options':'DENY', 'X-Content-Type-Options':'nosniff',
-    'Content-Security-Policy':"default-src 'none'; style-src 'self'; img-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+    'Content-Security-Policy':"default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
     ...extra
   }});
 }

@@ -12,7 +12,8 @@ button,header a{background:white;border:1px solid #d9e2df;border-radius:7px;padd
 h1{font-size:clamp(24px,3vw,32px);line-height:1.3;letter-spacing:-.045em}
 .login h1{margin:18px 0 22px}.login label,.search label{display:block;font-size:14px;font-weight:650;margin:12px 0 5px}
 input{min-width:0;width:100%;padding:10px 12px;border:1px solid #cbd8d4;border-radius:7px;color:inherit;background:#fff}
-.login button{margin-top:20px;width:100%}.error{color:#a5262d;font-size:13px;margin-top:10px}
+.login button.primary{margin-top:20px;width:100%}.error{color:#a5262d;font-size:13px;margin-top:10px}
+.password-field{position:relative}.password-field input{padding-right:50px}.password-toggle{position:absolute;right:3px;top:50%;transform:translateY(-50%);display:grid;place-items:center;width:42px;height:38px;padding:0;border:0;background:transparent;color:#526968}.password-toggle[hidden]{display:none}.password-toggle:hover{color:#196c58}.save-hint{margin:12px 0 0;color:#627875;font-size:12px}
 .workspace{display:grid;grid-template-columns:205px minmax(0,1fr);min-height:100svh}
 aside{background:#172f35;color:white;padding:24px 16px}aside .brand{margin-bottom:30px}
 nav{display:grid;gap:6px}nav a{padding:10px 12px;border-radius:7px;font-size:14px}nav a[aria-current]{background:#def1e9;color:#144e40;font-weight:700}

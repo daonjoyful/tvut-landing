@@ -9,9 +9,9 @@ export function loginPage(failed) {
   return documentPage('로그인', `<main class="login"><section class="login-card"><div class="brand"><i aria-hidden="true">티</i>티벗 운영</div>
     <h1>관리자 로그인</h1><form action="/admin/login" method="post">
     <label for="username">아이디</label><input id="username" name="username" value="admin" autocomplete="username" required>
-    <label for="password">비밀번호</label><input id="password" name="password" type="password" autocomplete="current-password" maxlength="100" required autofocus>
+    <label for="password">비밀번호</label><div class="password-field"><input id="password" name="password" type="password" autocomplete="current-password" maxlength="100" required autofocus><button class="password-toggle" type="button" aria-label="비밀번호 보기" aria-pressed="false" aria-controls="password" hidden><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
     ${failed ? '<p class="error" role="alert">아이디와 비밀번호를 확인해 주세요.</p>' : ''}
-    <button class="primary">로그인</button></form></section></main>`);
+    <button class="primary">로그인</button><p class="save-hint">로그인 후 브라우저에서 비밀번호 저장을 선택하세요.</p></form><script src="/assets/tvut-admin-login.js" defer></script></section></main>`);
 }
 function workspace(title, content) {
   return documentPage(title, `<div class="workspace"><aside><div class="brand"><i aria-hidden="true">티</i>티벗 관리자</div><nav aria-label="관리 메뉴">
