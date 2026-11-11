@@ -2,6 +2,7 @@ import credential from './credential.json';
 import entries from './catalog.json';
 import {loginPage, dashboardPage, postsPage, analyticsPage, passwordPage} from '../../scripts/admin-view.mjs';
 import {fetchAnalytics} from '../../scripts/admin-analytics.mjs';
+import {fetchSearch} from '../../scripts/admin-search.mjs';
 
 const origin = 'https://tvut.3678dairy.com';
 const cookieName = '__Host-tvut_admin';
@@ -151,7 +152,12 @@ export async function onRequest({request,env}) {
   if (route === '/admin/password') return respond(passwordPage());
   if (route === '/admin/analytics') {
     const period = url.searchParams.get('period') || '30days';
-    try { return respond(analyticsPage(await fetchAnalytics(env,period),period)); }
+    try {
+      const reports = await fetchAnalytics(env,period);
+      let search = null, searchError = '';
+      try { search = await fetchSearch(env,period); } catch (error) { searchError = error.message; }
+      return respond(analyticsPage(reports,period,'',search,searchError,url.searchParams.get('q') || ''));
+    }
     catch (error) { return respond(analyticsPage(null,period,error.message)); }
   }
   if (route === '/admin/posts') return respond(postsPage(entries, url.searchParams.get('q') || ''));
