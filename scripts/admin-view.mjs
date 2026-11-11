@@ -53,13 +53,18 @@ export function dashboardPage(entries, reports = null) {
     <div class="panels"><section class="panel"><div class="heading"><h2>최근 방송 글</h2><a href="/admin/posts">전체 보기 →</a></div>${rows(reviews.slice(0,5))}</section>
     <section class="panel"><h2>프로그램 안내</h2>${rows(guides)}</section></div>`);
 }
-export function postsPage(entries, search) {
+export function postsPage(entries, search, articles=[]) {
   const term = search.trim().slice(0,150);
   const filtered = entries.filter(entry => [entry.program, entry.title, entry.url, entry.date].join(' ').toLowerCase().includes(term.toLowerCase()));
-  return workspace('게시글', `<section class="panel"><form method="get" action="/admin/posts" class="search"><label for="q">게시글 검색</label><div>
+  const written = articles.map(row=>{const draft=JSON.parse(row.draft); return `<li><a href="/admin/article?slug=${encodeURIComponent(row.slug)}"><span><small>${row.published?'발행됨 · 수정 가능':'임시저장'}</small><strong>${escape(draft.title)}</strong></span><span>편집 →</span></a></li>`}).join('');
+  return workspace('게시글', `<section class="panel"><div class="heading"><h2>관리자 작성 글</h2><a class="primary" href="/admin/article">새 글 작성</a></div>${written?'<ul class="entries">'+written+'</ul>':'<p>관리자에서 작성한 글이 없습니다.</p>'}</section><section class="panel"><form method="get" action="/admin/posts" class="search"><label for="q">기존 공개 페이지 검색</label><div>
     <input type="search" id="q" name="q" value="${escape(term)}" maxlength="150" placeholder="제목, 프로그램, 주소"><button class="primary">검색</button></div></form>
     <div class="heading"><h2>${term ? '검색 결과' : '공개 글'} ${filtered.length}개</h2>${term ? '<a href="/admin/posts">전체 보기</a>' : ''}</div>
-    ${filtered.length ? rows(filtered) : '<p>일치하는 게시글이 없습니다.</p>'}</section>`);
+    ${filtered.length ? rows(filtered) : '<p>일치하는 게시글이 없습니다.</p>'}<p>기존 정적 페이지의 편집은 아직 지원하지 않습니다.</p></section>`);
+}
+export function articleEditor(row=null,error='',hasRevision=false,values=null) {
+  const a = values || (row ? JSON.parse(row.draft) : {slug:'',title:'',description:'',body:''});
+  return workspace(row?'게시글 편집':'새 글 작성', `<section class="panel"><form method="post" action="/admin/article-save" class="article-form"><input type="hidden" name="old_slug" value="${escape(row?.slug || '')}"><input type="hidden" name="version" value="${escape(row?.updated || '')}"><label for="slug">글 주소 (영문 소문자·숫자·하이픈)</label><input id="slug" name="slug" value="${escape(a.slug)}" maxlength="80" ${row?'readonly':''} required><label for="article-title">제목</label><input id="article-title" name="title" value="${escape(a.title)}" maxlength="150" required><label for="description">검색 설명</label><textarea id="description" name="description" maxlength="300" rows="3" required>${escape(a.description)}</textarea><label for="body">본문</label><textarea id="body" name="body" maxlength="50000" rows="18" required>${escape(a.body)}</textarea><p>빈 줄을 넣으면 문단이 구분됩니다. 글은 임시저장 후 미리보기에서 확인하고 발행합니다.</p>${error?'<p class="error">'+escape(error)+'</p>':''}<button class="primary">임시저장</button></form>${row?`<div class="article-actions"><a href="/admin/article-preview?slug=${encodeURIComponent(row.slug)}" target="_blank" rel="noopener">임시저장 글 미리보기 ↗</a><form method="post" action="/admin/article-publish"><input type="hidden" name="slug" value="${escape(row.slug)}"><input type="hidden" name="version" value="${escape(row.updated)}"><button class="primary">${row.published?'수정사항 발행':'발행하기'}</button></form>${row.published?`<a href="/review/notice/${encodeURIComponent(row.slug)}/" target="_blank" rel="noopener">공개 글 보기 ↗</a>`:''}${hasRevision?`<form method="post" action="/admin/article-restore"><input type="hidden" name="slug" value="${escape(row.slug)}"><input type="hidden" name="version" value="${escape(row.updated)}"><button>이전 발행본 복구</button></form>`:''}</div>`:''}</section>`);
 }
 function pageOptions(entries, selected) {
   const pages = [{url:'/',title:'티벗 메인페이지'},...entries.filter(e=>e.url !== '/')];

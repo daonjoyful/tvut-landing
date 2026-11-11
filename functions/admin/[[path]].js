@@ -1,10 +1,11 @@
 import credential from './credential.json';
 import entries from './catalog.json';
-import {loginPage, dashboardPage, postsPage, analyticsPage, passwordPage, seoPage, indexNowPage} from '../../scripts/admin-view.mjs';
+import {loginPage, dashboardPage, postsPage, analyticsPage, passwordPage, seoPage, indexNowPage, articleEditor} from '../../scripts/admin-view.mjs';
 import {fetchAnalytics} from '../../scripts/admin-analytics.mjs';
 import {fetchSearch} from '../../scripts/admin-search.mjs';
 import {saveNaverReport, readNaverReport} from '../../scripts/admin-naver.mjs';
 import {allowedPath, diagnose, submitIndexNow} from '../../scripts/admin-seo.mjs';
+import {articleList, articleGet, articleSave, articlePublish, articleRestore, articleHasRevision, renderArticle} from '../../scripts/admin-articles.mjs';
 
 const origin = 'https://tvut.3678dairy.com';
 const cookieName = '__Host-tvut_admin';
@@ -78,6 +79,10 @@ function redirect(location, cookie) {
 function sessionCookie(value, age) {
   return cookieName + '=' + value + '; Path=/; Secure; HttpOnly; SameSite=Strict; Max-Age=' + age;
 }
+async function searchableEntries(env) {
+  const articles = await articleList(env.TVUT_ADMIN_DB);
+  return [...entries,...articles.filter(row=>row.published).map(row=>({url:'/review/notice/'+row.slug+'/',title:JSON.parse(row.published).title,program:'관리자 작성',date:''}))];
+}
 async function loginForm(request, limit = 1024) {
   const reader = request.body?.getReader();
   if (!reader) return new URLSearchParams();
@@ -124,21 +129,39 @@ export async function onRequest({request,env}) {
   if (request.method === 'POST') {
     if (request.headers.get('Origin') !== origin) return respond('요청 출처를 확인해 주세요.', 403);
     if (route === '/admin/logout') return redirect('/admin/', sessionCookie('', 0));
-    if (!['/admin/login','/admin/password','/admin/naver-report','/admin/indexnow'].includes(route)) return respond('페이지를 찾을 수 없습니다.', 404);
+    if (!['/admin/login','/admin/password','/admin/naver-report','/admin/indexnow','/admin/article-save','/admin/article-publish','/admin/article-restore'].includes(route)) return respond('페이지를 찾을 수 없습니다.', 404);
     if (!request.headers.get('Content-Type')?.startsWith('application/x-www-form-urlencoded')) return respond('입력 형식을 확인해 주세요.', 415);
-    const limit = route === '/admin/naver-report' ? 65536 : 1024;
+    const limit = route === '/admin/article-save' ? 600000 : route === '/admin/naver-report' ? 65536 : 1024;
     if (Number(request.headers.get('Content-Length')) > limit) return respond('입력이 너무 깁니다.', 413);
     const form = await loginForm(request,limit);
     if (!form) return respond('입력이 너무 깁니다.', 413);
     let record;
     try { record = await currentCredential(env); }
     catch { return respond('관리자 인증 저장소에 연결할 수 없습니다.',503); }
+    if (['/admin/article-save','/admin/article-publish','/admin/article-restore'].includes(route)) {
+      if (!await signedIn(request,record)) return redirect('/admin/');
+      try {
+        const slug = route === '/admin/article-save' ? await articleSave(env.TVUT_ADMIN_DB,form) : form.get('slug');
+        if (route === '/admin/article-publish') await articlePublish(env.TVUT_ADMIN_DB,slug,form.get('version'));
+        if (route === '/admin/article-restore') await articleRestore(env.TVUT_ADMIN_DB,slug,form.get('version'));
+        return redirect('/admin/article?slug='+encodeURIComponent(slug));
+      } catch (error) {
+        if (route === '/admin/article-save') {
+          const oldSlug = form.get('old_slug');
+          let old = null; try { if (oldSlug) { old = await articleGet(env.TVUT_ADMIN_DB,oldSlug); if (old) old = {...old,updated:form.get('version') || ''}; } } catch {}
+          const values = Object.fromEntries(['slug','title','description','body'].map(key=>[key,(form.get(key)||'').slice(0,key==='body'?50000:300)]));
+          return respond(articleEditor(old,'저장하지 못했습니다. 주소 중복이나 입력값, 동시 수정 여부를 확인해 주세요.',false,values),400);
+        }
+        return respond('발행 또는 복구하지 못했습니다. 글이 변경되었거나 복구할 이전 발행본이 없습니다. 이전 화면에서 다시 확인해 주세요.',400);
+      }
+    }
     if (route === '/admin/indexnow') {
       if (!await signedIn(request,record)) return redirect('/admin/');
       const path = form.get('path') || '';
-      if (!allowedPath(path,entries)) return respond(indexNowPage(entries,'/',null,'목록에 있는 공개 페이지만 제출할 수 있습니다.'),400);
-      try { const status = await submitIndexNow(path,entries); return respond(indexNowPage(entries,path,status),status === 200 || status === 202 ? 200 : 502); }
-      catch { return respond(indexNowPage(entries,path,null,'요청에 실패했습니다. 잠시 후 다시 시도해 주세요.'),502); }
+      const all = await searchableEntries(env);
+      if (!allowedPath(path,all)) return respond(indexNowPage(all,'/',null,'목록에 있는 공개 페이지만 제출할 수 있습니다.'),400);
+      try { const status = await submitIndexNow(path,all); return respond(indexNowPage(all,path,status),status === 200 || status === 202 ? 200 : 502); }
+      catch { return respond(indexNowPage(all,path,null,'요청에 실패했습니다. 잠시 후 다시 시도해 주세요.'),502); }
     }
     if (route === '/admin/naver-report') {
       if (!await signedIn(request,record)) return redirect('/admin/');
@@ -157,22 +180,31 @@ export async function onRequest({request,env}) {
     return redirect('/admin/', sessionCookie(token, lifetime));
   }
   if (request.method !== 'GET' && request.method !== 'HEAD') return respond(null, 405, {Allow:'GET, HEAD, POST'});
-  if (!['/admin', '/admin/login', '/admin/posts', '/admin/analytics', '/admin/password','/admin/seo','/admin/indexnow'].includes(route)) return respond('페이지를 찾을 수 없습니다.', 404);
+  if (!['/admin', '/admin/login', '/admin/posts', '/admin/analytics', '/admin/password','/admin/seo','/admin/indexnow','/admin/article','/admin/article-preview'].includes(route)) return respond('페이지를 찾을 수 없습니다.', 404);
   let record;
   try { record = await currentCredential(env); }
   catch { return respond('관리자 인증 저장소에 연결할 수 없습니다.',503); }
   const authenticated = await signedIn(request,record);
-  if (!authenticated && ['/admin/posts','/admin/analytics','/admin/password','/admin/seo','/admin/indexnow'].includes(route)) return redirect('/admin/');
+  if (!authenticated && ['/admin/posts','/admin/analytics','/admin/password','/admin/seo','/admin/indexnow','/admin/article','/admin/article-preview'].includes(route)) return redirect('/admin/');
   if (request.method === 'HEAD') return respond(null);
   if (!authenticated) return respond(loginPage(false,url.searchParams.get('password') === 'changed'));
   if (route === '/admin/password') return respond(passwordPage());
-  if (route === '/admin/indexnow') return respond(indexNowPage(entries));
+  if (route === '/admin/article' || route === '/admin/article-preview') {
+    const slug = url.searchParams.get('slug');
+    if (route === '/admin/article' && !slug) return respond(articleEditor());
+    const article = await articleGet(env.TVUT_ADMIN_DB,slug);
+    if (!article) return respond('글을 찾을 수 없습니다.',404);
+    if (route === '/admin/article-preview') return respond(renderArticle(JSON.parse(article.draft),true));
+    return respond(articleEditor(article,'',await articleHasRevision(env.TVUT_ADMIN_DB,slug)));
+  }
+  if (route === '/admin/indexnow') return respond(indexNowPage(await searchableEntries(env)));
   if (route === '/admin/seo') {
+    const all = await searchableEntries(env);
     const path = url.searchParams.get('path');
-    if (path === null) return respond(seoPage(entries));
-    if (!allowedPath(path,entries)) return respond(seoPage(entries,'/',null,'목록에 있는 공개 페이지만 진단할 수 있습니다.'),400);
-    try { return respond(seoPage(entries,path,await diagnose(path,entries))); }
-    catch { return respond(seoPage(entries,path,null,'페이지를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'),502); }
+    if (path === null) return respond(seoPage(all));
+    if (!allowedPath(path,all)) return respond(seoPage(all,'/',null,'목록에 있는 공개 페이지만 진단할 수 있습니다.'),400);
+    try { return respond(seoPage(all,path,await diagnose(path,all))); }
+    catch { return respond(seoPage(all,path,null,'페이지를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'),502); }
   }
   if (route === '/admin/analytics') {
     const period = url.searchParams.get('period') || '30days';
@@ -186,7 +218,7 @@ export async function onRequest({request,env}) {
     }
     catch (error) { return respond(analyticsPage(null,period,error.message)); }
   }
-  if (route === '/admin/posts') return respond(postsPage(entries, url.searchParams.get('q') || ''));
+  if (route === '/admin/posts') return respond(postsPage(entries, url.searchParams.get('q') || '',await articleList(env.TVUT_ADMIN_DB)));
   let reports = null;
   try { reports = await fetchAnalytics(env,'30days'); } catch {}
   return respond(dashboardPage(entries, reports));
