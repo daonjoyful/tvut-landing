@@ -7,6 +7,7 @@ import {saveNaverReport, readNaverReport} from '../../scripts/admin-naver.mjs';
 import {allowedPath, diagnose, submitIndexNow} from '../../scripts/admin-seo.mjs';
 import {articleList, articleGet, articleSave, articlePublish, articleRestore, articleHasRevision, renderArticle} from '../../scripts/admin-articles.mjs';
 import {permitted,originalPage,fields,fingerprint,getStatic,saveStatic,publishStatic,restoreStatic,applyChanges} from '../../scripts/admin-static-editor.mjs';
+import {fetchRealtime} from '../../scripts/admin-realtime.mjs';
 
 const origin = 'https://tvut.3678dairy.com';
 const cookieName = '__Host-tvut_admin';
@@ -73,6 +74,9 @@ function respond(body, status = 200, extra = {}) {
     'Content-Security-Policy':"default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
     ...extra
   }});
+}
+function jsonRespond(data,status=200) {
+  return new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff','X-Robots-Tag':'noindex, nofollow'}});
 }
 function redirect(location, cookie) {
   return respond(null, 303, cookie ? {Location:location, 'Set-Cookie':cookie} : {Location:location});
@@ -192,11 +196,17 @@ export async function onRequest({request,env}) {
     return redirect('/admin/', sessionCookie(token, lifetime));
   }
   if (request.method !== 'GET' && request.method !== 'HEAD') return respond(null, 405, {Allow:'GET, HEAD, POST'});
-  if (!['/admin', '/admin/login', '/admin/posts', '/admin/analytics', '/admin/password','/admin/seo','/admin/indexnow','/admin/article','/admin/article-preview','/admin/static-edit','/admin/static-preview'].includes(route)) return respond('페이지를 찾을 수 없습니다.', 404);
+  if (!['/admin', '/admin/login', '/admin/posts', '/admin/analytics', '/admin/password','/admin/seo','/admin/indexnow','/admin/article','/admin/article-preview','/admin/static-edit','/admin/static-preview','/admin/realtime-data'].includes(route)) return respond('페이지를 찾을 수 없습니다.', 404);
   let record;
   try { record = await currentCredential(env); }
-  catch { return respond('관리자 인증 저장소에 연결할 수 없습니다.',503); }
+  catch { return route==='/admin/realtime-data' ? jsonRespond({error:'관리자 인증 저장소에 연결할 수 없습니다.'},503) : respond('관리자 인증 저장소에 연결할 수 없습니다.',503); }
   const authenticated = await signedIn(request,record);
+  if (route === '/admin/realtime-data') {
+    if (!authenticated) return jsonRespond({error:'로그인이 필요합니다.'},401);
+    if (request.method === 'HEAD') return new Response(null,{status:200,headers:{'Cache-Control':'private, no-store'}});
+    try { return jsonRespond(await fetchRealtime(env)); }
+    catch (error) { return jsonRespond({error:error.message || '실시간 통계를 조회하지 못했습니다.'},503); }
+  }
   if (!authenticated && ['/admin/posts','/admin/analytics','/admin/password','/admin/seo','/admin/indexnow','/admin/article','/admin/article-preview','/admin/static-edit','/admin/static-preview'].includes(route)) return redirect('/admin/');
   if (request.method === 'HEAD') return respond(null);
   if (!authenticated) return respond(loginPage(false,url.searchParams.get('password') === 'changed'));
