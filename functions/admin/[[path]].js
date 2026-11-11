@@ -50,7 +50,7 @@ async function signedIn(request) {
 function respond(body, status = 200, extra = {}) {
   return new Response(body, {status, headers:{
     'Content-Type':'text/html; charset=utf-8', 'Cache-Control':'private, no-store',
-    'X-Robots-Tag':'noindex, nofollow, noarchive', 'Referrer-Policy':'no-referrer',
+    'X-Robots-Tag':'noindex, nofollow, noarchive', 'Referrer-Policy':'same-origin',
     'X-Frame-Options':'DENY', 'X-Content-Type-Options':'nosniff',
     'Content-Security-Policy':"default-src 'none'; style-src 'self'; img-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
     ...extra
