@@ -181,7 +181,7 @@ export async function onRequest({request,env}) {
           const oldSlug = form.get('old_slug');
           let old = null; try { if (oldSlug) { old = await articleGet(env.TVUT_ADMIN_DB,oldSlug); if (old) old = {...old,updated:form.get('version') || ''}; } } catch {}
           const values = Object.fromEntries(['slug','title','description','body'].map(key=>[key,(form.get(key)||'').slice(0,key==='body'?50000:300)]));
-          values.summary=(form.get('summary')||'').slice(0,3000); values.buttonLabel=(form.get('button_label')||'').slice(0,80); values.buttonUrl=(form.get('button_url')||'').slice(0,2048);
+          values.summary=(form.get('summary')||'').slice(0,3000); values.buttonLabel=(form.get('button_label')||'').slice(0,80); values.buttonUrl=(form.get('button_url')||'').slice(0,2048); values.thumbnail=(form.get('thumbnail')||'').slice(0,200);
           return respond(articleEditor(old,'저장하지 못했습니다. 주소 중복이나 입력값, 동시 수정 여부를 확인해 주세요.',false,values),400);
         }
         return respond('발행 또는 복구하지 못했습니다. 글이 변경되었거나 복구할 이전 발행본이 없습니다. 이전 화면에서 다시 확인해 주세요.',400);
