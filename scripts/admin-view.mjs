@@ -23,11 +23,24 @@ function workspace(title, content) {
 function rows(entries) {
   return '<ul class="entries">' + entries.map(entry => `<li><a href="${escape(entry.url)}" target="_blank" rel="noopener"><span><small>${escape(entry.program)} · ${entry.date ? escape(entry.date) : '프로그램 안내'}</small><strong>${escape(entry.title)}</strong></span><span aria-hidden="true">↗</span></a></li>`).join('') + '</ul>';
 }
-export function dashboardPage(entries) {
+function barChart(rows, label) {
+  if (!rows.length) return '<p>해당 기간의 자료가 없습니다.</p>';
+  const values = rows;
+  const max = Math.max(...values.map(row => row.value), 1);
+  const width = Math.max(values.length * 22, 220);
+  const bars = values.map((row, index) => {
+    const height = Math.max(2, Math.round(row.value / max * 130));
+    const text = escape(row.dimensions[0]) + ' · ' + row.value.toLocaleString('ko-KR');
+    return `<rect x="${index * 22 + 5}" y="${140-height}" width="14" height="${height}" rx="3"><title>${text}</title></rect>`;
+  }).join('');
+  return `<div class="chart-wrap"><svg class="chart" viewBox="0 0 ${width} 150" role="img" aria-label="${escape(label)}">${bars}</svg></div>`;
+}
+export function dashboardPage(entries, reports = null) {
   const reviews = entries.filter(entry => entry.date).sort((a,b) => b.date.localeCompare(a.date));
   const guides = entries.filter(entry => !entry.date);
   return workspace('대시보드', `<section class="cards" aria-label="콘텐츠 현황">
     <article><span>전체 게시글</span><b>${entries.length}</b></article><article><span>프로그램 안내</span><b>${guides.length}</b></article><article><span>방송 글</span><b>${reviews.length}</b></article></section>
+    ${reports ? `<section class="panel overview-chart"><div class="heading"><h2>최근 30일 페이지 조회수</h2><a href="/admin/analytics">통계 보기 →</a></div>${barChart([...reports[0]].sort((a,b)=>a.dimensions[0].localeCompare(b.dimensions[0])), '최근 30일 날짜별 페이지 조회수')}</section>` : ''}
     <div class="panels"><section class="panel"><div class="heading"><h2>최근 방송 글</h2><a href="/admin/posts">전체 보기 →</a></div>${rows(reviews.slice(0,5))}</section>
     <section class="panel"><h2>프로그램 안내</h2>${rows(guides)}</section></div>`);
 }
@@ -47,8 +60,8 @@ export function analyticsPage(reports, selected, error='') {
   const table = (rows, labels) => '<div class="table-wrap"><table><thead><tr>' + labels.map(label=>'<th>'+label+'</th>').join('') + '</tr></thead><tbody>' + rows.map(row=>'<tr>'+row.dimensions.map(value=>'<td>'+escape(value)+'</td>').join('')+'<td>'+row.value.toLocaleString('ko-KR')+'</td></tr>').join('')+'</tbody></table></div>';
   const views = daily.reduce((sum,row)=>sum+row.value,0);
   return workspace('방문 통계', `<div class="periods">${buttons}</div><section class="cards"><article><span>페이지 조회수</span><b>${views.toLocaleString('ko-KR')}</b></article></section><div class="panels">
-  <section class="panel"><h2>날짜별 조회수</h2>${table(daily.sort((a,b)=>b.dimensions[0].localeCompare(a.dimensions[0])),['날짜','조회수'])}</section>
-  <section class="panel"><h2>유입 경로</h2>${table(sources.sort((a,b)=>b.value-a.value),['출처 / 매체','세션'])}</section></div>
+  <section class="panel"><h2>날짜별 조회수</h2>${barChart([...daily].sort((a,b)=>a.dimensions[0].localeCompare(b.dimensions[0])), '날짜별 페이지 조회수')}${table(daily.sort((a,b)=>b.dimensions[0].localeCompare(a.dimensions[0])),['날짜','조회수'])}</section>
+  <section class="panel"><h2>유입 경로</h2>${barChart([...sources].sort((a,b)=>b.value-a.value).slice(0,10), '유입 경로별 세션')}${table(sources.sort((a,b)=>b.value-a.value),['출처 / 매체','세션'])}</section></div>
   <section class="panel"><h2>도착 페이지와 유입 경로</h2>${table(landing.sort((a,b)=>b.value-a.value),['도착 페이지','출처 / 매체','세션'])}</section>
   <section class="panel"><h2>캠페인 검색어와 도착 페이지</h2>${terms.filter(row=>row.dimensions[0] && row.dimensions[0]!=='(not set)').length ? table(terms.filter(row=>row.dimensions[0] && row.dimensions[0]!=='(not set)').sort((a,b)=>b.value-a.value),['캠페인 검색어','도착 페이지','세션']) : '<p>선택한 기간에 수집된 캠페인 검색어가 없습니다.</p>'}<p>UTM 캠페인에 입력된 검색어입니다. 자연검색 검색어는 Google Search Console 또는 네이버 서치어드바이저 자료가 필요합니다.</p></section>`);
 }

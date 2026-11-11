@@ -108,5 +108,8 @@ export async function onRequest({request,env}) {
     try { return respond(analyticsPage(await fetchAnalytics(env,period),period)); }
     catch (error) { return respond(analyticsPage(null,period,error.message)); }
   }
-  return respond(route === '/admin/posts' ? postsPage(entries, url.searchParams.get('q') || '') : dashboardPage(entries));
+  if (route === '/admin/posts') return respond(postsPage(entries, url.searchParams.get('q') || ''));
+  let reports = null;
+  try { reports = await fetchAnalytics(env,'30days'); } catch {}
+  return respond(dashboardPage(entries, reports));
 }
