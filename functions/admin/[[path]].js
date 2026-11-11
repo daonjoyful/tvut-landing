@@ -1,11 +1,12 @@
 import credential from './credential.json';
 import entries from './catalog.json';
-import {loginPage, dashboardPage, postsPage, analyticsPage, passwordPage, seoPage, indexNowPage, articleEditor} from '../../scripts/admin-view.mjs';
+import {loginPage, dashboardPage, postsPage, analyticsPage, passwordPage, seoPage, indexNowPage, articleEditor, staticEditor} from '../../scripts/admin-view.mjs';
 import {fetchAnalytics} from '../../scripts/admin-analytics.mjs';
 import {fetchSearch} from '../../scripts/admin-search.mjs';
 import {saveNaverReport, readNaverReport} from '../../scripts/admin-naver.mjs';
 import {allowedPath, diagnose, submitIndexNow} from '../../scripts/admin-seo.mjs';
 import {articleList, articleGet, articleSave, articlePublish, articleRestore, articleHasRevision, renderArticle} from '../../scripts/admin-articles.mjs';
+import {permitted,originalPage,fields,fingerprint,getStatic,saveStatic,publishStatic,restoreStatic,applyChanges} from '../../scripts/admin-static-editor.mjs';
 
 const origin = 'https://tvut.3678dairy.com';
 const cookieName = '__Host-tvut_admin';
@@ -129,15 +130,26 @@ export async function onRequest({request,env}) {
   if (request.method === 'POST') {
     if (request.headers.get('Origin') !== origin) return respond('요청 출처를 확인해 주세요.', 403);
     if (route === '/admin/logout') return redirect('/admin/', sessionCookie('', 0));
-    if (!['/admin/login','/admin/password','/admin/naver-report','/admin/indexnow','/admin/article-save','/admin/article-publish','/admin/article-restore'].includes(route)) return respond('페이지를 찾을 수 없습니다.', 404);
+    if (!['/admin/login','/admin/password','/admin/naver-report','/admin/indexnow','/admin/article-save','/admin/article-publish','/admin/article-restore','/admin/static-save','/admin/static-publish','/admin/static-restore'].includes(route)) return respond('페이지를 찾을 수 없습니다.', 404);
     if (!request.headers.get('Content-Type')?.startsWith('application/x-www-form-urlencoded')) return respond('입력 형식을 확인해 주세요.', 415);
-    const limit = route === '/admin/article-save' ? 600000 : route === '/admin/naver-report' ? 65536 : 1024;
+    const limit = ['/admin/article-save','/admin/static-save'].includes(route) ? 600000 : route === '/admin/naver-report' ? 65536 : 1024;
     if (Number(request.headers.get('Content-Length')) > limit) return respond('입력이 너무 깁니다.', 413);
     const form = await loginForm(request,limit);
     if (!form) return respond('입력이 너무 깁니다.', 413);
     let record;
     try { record = await currentCredential(env); }
     catch { return respond('관리자 인증 저장소에 연결할 수 없습니다.',503); }
+    if (['/admin/static-save','/admin/static-publish','/admin/static-restore'].includes(route)) {
+      if (!await signedIn(request,record)) return redirect('/admin/');
+      const path=form.get('path') || '';
+      if (!permitted(path,entries)) return respond('수정할 수 없는 페이지입니다.',400);
+      try {
+        if (route==='/admin/static-save') await saveStatic(env.TVUT_ADMIN_DB,path,entries,form);
+        if (route==='/admin/static-publish') await publishStatic(env.TVUT_ADMIN_DB,path,entries,form.get('version'));
+        if (route==='/admin/static-restore') await restoreStatic(env.TVUT_ADMIN_DB,path,entries,form.get('version'));
+        return redirect('/admin/static-edit?path='+encodeURIComponent(path));
+      } catch { return respond('수정 내용을 처리하지 못했습니다. 원본이나 저장된 수정본이 변경되었을 수 있습니다. 이전 화면에서 작성한 내용을 복사한 뒤 다시 확인해 주세요.',400); }
+    }
     if (['/admin/article-save','/admin/article-publish','/admin/article-restore'].includes(route)) {
       if (!await signedIn(request,record)) return redirect('/admin/');
       try {
@@ -180,15 +192,27 @@ export async function onRequest({request,env}) {
     return redirect('/admin/', sessionCookie(token, lifetime));
   }
   if (request.method !== 'GET' && request.method !== 'HEAD') return respond(null, 405, {Allow:'GET, HEAD, POST'});
-  if (!['/admin', '/admin/login', '/admin/posts', '/admin/analytics', '/admin/password','/admin/seo','/admin/indexnow','/admin/article','/admin/article-preview'].includes(route)) return respond('페이지를 찾을 수 없습니다.', 404);
+  if (!['/admin', '/admin/login', '/admin/posts', '/admin/analytics', '/admin/password','/admin/seo','/admin/indexnow','/admin/article','/admin/article-preview','/admin/static-edit','/admin/static-preview'].includes(route)) return respond('페이지를 찾을 수 없습니다.', 404);
   let record;
   try { record = await currentCredential(env); }
   catch { return respond('관리자 인증 저장소에 연결할 수 없습니다.',503); }
   const authenticated = await signedIn(request,record);
-  if (!authenticated && ['/admin/posts','/admin/analytics','/admin/password','/admin/seo','/admin/indexnow','/admin/article','/admin/article-preview'].includes(route)) return redirect('/admin/');
+  if (!authenticated && ['/admin/posts','/admin/analytics','/admin/password','/admin/seo','/admin/indexnow','/admin/article','/admin/article-preview','/admin/static-edit','/admin/static-preview'].includes(route)) return redirect('/admin/');
   if (request.method === 'HEAD') return respond(null);
   if (!authenticated) return respond(loginPage(false,url.searchParams.get('password') === 'changed'));
   if (route === '/admin/password') return respond(passwordPage());
+  if (route === '/admin/static-edit' || route === '/admin/static-preview') {
+    const path=url.searchParams.get('path') || '';
+    if (!permitted(path,entries)) return respond('수정할 수 없는 페이지입니다.',400);
+    try {
+      const html=await originalPage(path,entries), hash=await fingerprint(html), row=await getStatic(env.TVUT_ADMIN_DB,path);
+      if (route === '/admin/static-preview') {
+        if (!row || hash!==row.source_hash) return respond('미리보기할 수정본이 없거나 원본이 변경되었습니다.',409);
+        return respond(applyChanges(html,JSON.parse(row.draft)));
+      }
+      return respond(staticEditor(path,fields(html),hash,row));
+    } catch { return respond('원본 페이지를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.',502); }
+  }
   if (route === '/admin/article' || route === '/admin/article-preview') {
     const slug = url.searchParams.get('slug');
     if (route === '/admin/article' && !slug) return respond(articleEditor());
