@@ -3,6 +3,7 @@ import entries from './catalog.json';
 import {loginPage, dashboardPage, postsPage, analyticsPage, passwordPage} from '../../scripts/admin-view.mjs';
 import {fetchAnalytics} from '../../scripts/admin-analytics.mjs';
 import {fetchSearch} from '../../scripts/admin-search.mjs';
+import {saveNaverReport, readNaverReport} from '../../scripts/admin-naver.mjs';
 
 const origin = 'https://tvut.3678dairy.com';
 const cookieName = '__Host-tvut_admin';
@@ -76,7 +77,7 @@ function redirect(location, cookie) {
 function sessionCookie(value, age) {
   return cookieName + '=' + value + '; Path=/; Secure; HttpOnly; SameSite=Strict; Max-Age=' + age;
 }
-async function loginForm(request) {
+async function loginForm(request, limit = 1024) {
   const reader = request.body?.getReader();
   if (!reader) return new URLSearchParams();
   const decoder = new TextDecoder();
@@ -87,7 +88,7 @@ async function loginForm(request) {
       const {done, value} = await reader.read();
       if (done) return new URLSearchParams(text + decoder.decode());
       bytes += value.byteLength;
-      if (bytes > 1024) {
+      if (bytes > limit) {
         await reader.cancel();
         return null;
       }
@@ -122,14 +123,21 @@ export async function onRequest({request,env}) {
   if (request.method === 'POST') {
     if (request.headers.get('Origin') !== origin) return respond('요청 출처를 확인해 주세요.', 403);
     if (route === '/admin/logout') return redirect('/admin/', sessionCookie('', 0));
-    if (!['/admin/login','/admin/password'].includes(route)) return respond('페이지를 찾을 수 없습니다.', 404);
+    if (!['/admin/login','/admin/password','/admin/naver-report'].includes(route)) return respond('페이지를 찾을 수 없습니다.', 404);
     if (!request.headers.get('Content-Type')?.startsWith('application/x-www-form-urlencoded')) return respond('입력 형식을 확인해 주세요.', 415);
-    if (Number(request.headers.get('Content-Length')) > 1024) return respond('입력이 너무 깁니다.', 413);
-    const form = await loginForm(request);
+    const limit = route === '/admin/naver-report' ? 65536 : 1024;
+    if (Number(request.headers.get('Content-Length')) > limit) return respond('입력이 너무 깁니다.', 413);
+    const form = await loginForm(request,limit);
     if (!form) return respond('입력이 너무 깁니다.', 413);
     let record;
     try { record = await currentCredential(env); }
     catch { return respond('관리자 인증 저장소에 연결할 수 없습니다.',503); }
+    if (route === '/admin/naver-report') {
+      if (!await signedIn(request,record)) return redirect('/admin/');
+      try { await saveNaverReport(env.TVUT_ADMIN_DB,form.get('report') || ''); }
+      catch { return respond('보고서 형식을 확인해 주세요.',400); }
+      return redirect('/admin/analytics?period=30days&naver=saved');
+    }
     if (route === '/admin/password') {
       if (!await signedIn(request,record)) return redirect('/admin/');
       const error = await changePassword(env,record,form);
@@ -156,7 +164,9 @@ export async function onRequest({request,env}) {
       const reports = await fetchAnalytics(env,period);
       let search = null, searchError = '';
       try { search = await fetchSearch(env,period); } catch (error) { searchError = error.message; }
-      return respond(analyticsPage(reports,period,'',search,searchError,url.searchParams.get('q') || ''));
+      let naver = null;
+      try { naver = await readNaverReport(env.TVUT_ADMIN_DB,({'today':'1','7days':'7','30days':'30','60days':'60','90days':'90'})[period] || '30'); } catch {}
+      return respond(analyticsPage(reports,period,'',search,searchError,url.searchParams.get('q') || '',naver));
     }
     catch (error) { return respond(analyticsPage(null,period,error.message)); }
   }
