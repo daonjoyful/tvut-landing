@@ -1,6 +1,7 @@
 import entries from '../functions/admin/catalog.json';
 
 const allowedSources = new Set(['naver-search','naver-other','google-search','daum-search','bing-search','ai-chatgpt','ai-claude','ai-perplexity','ai-other','external','internal','unknown']);
+export const isAllowedSource = source => allowedSources.has(source);
 const fixedPaths = new Set(['/','/review/','/review/notice/',...entries.map(e=>e.url)]);
 const initialized = new WeakMap();
 export function ensureSourceTable(db) {

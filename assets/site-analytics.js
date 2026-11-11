@@ -21,13 +21,12 @@
     groups: 'tvut',
     content_group: groups[program] || (location.pathname === '/' ? '메인' : '방송 안내 목록')
   });
-  // Anonymous, minute-level page-view counts: no query strings, IPs or visitor IDs.
-  // Respect browser privacy signals and send only a fixed source category.
+  // Anonymous events: never transmit raw referrers, query strings or visitor IDs.
   if (!navigator.globalPrivacyControl && navigator.doNotTrack !== '1' && window.doNotTrack !== '1') {
     try {
-      var source = 'unknown';
+      var source = 'unknown', ref = null, h = '';
       if (document.referrer) {
-        var ref = new URL(document.referrer), h = ref.hostname.toLowerCase();
+        ref = new URL(document.referrer); h = ref.hostname.toLowerCase();
         if (ref.origin === location.origin) source = 'internal';
         else if (h === 'search.naver.com' || h === 'm.search.naver.com') source = 'naver-search';
         else if (h === 'naver.com' || h.endsWith('.naver.com')) source = 'naver-other';
@@ -40,7 +39,19 @@
         else if (h === 'perplexity.ai' || h.endsWith('.perplexity.ai')) source = 'ai-perplexity';
         else source = 'external';
       }
-      var eventBody=JSON.stringify({source:source,path:location.pathname});
+      var safeTerms=['티벗','티벗 퀴즈','티벗퀴즈','티벗 앱 설치','티벗 설치','아침마당 티벗','아침마당 티벗퀴즈','생생정보 티벗','생생정보 퀴즈','생생정보 티벗퀴즈','무엇이든 물어보세요 티벗','6시 내고향 퀴즈','6시내고향오늘퀴즈','6시내고향 오늘퀴즈'];
+      var safeHosts=['search.naver.com','m.search.naver.com','naver.com','www.naver.com','m.naver.com','blog.naver.com','m.blog.naver.com','google.com','www.google.com','google.co.kr','www.google.co.kr','google.com.au','www.google.com.au','google.co.jp','www.google.co.jp','google.co.uk','www.google.co.uk','search.daum.net','m.search.daum.net','bing.com','www.bing.com','chatgpt.com','chat.openai.com','claude.ai','perplexity.ai','gemini.google.com','copilot.microsoft.com'];
+      function allowed(value,items,lower) {
+        if (!value) return 'not_provided';
+        value=String(value).trim().replace(/\s+/g,' '); if (lower) value=value.toLowerCase();
+        return items.indexOf(value)>=0 ? value : 'other';
+      }
+      var host=source==='unknown'?'not_provided':source==='internal'?'internal':safeHosts.indexOf(h)>=0?h:'other';
+      var rawSearch=ref && source==='naver-search'?ref.searchParams.get('query'):
+        ref && ['google-search','daum-search','bing-search'].indexOf(source)>=0?ref.searchParams.get('q'):null;
+      var params=new URL(location.href).searchParams;
+      var detail={host:host,search:allowed(rawSearch,safeTerms,false),utmSource:allowed(params.get('utm_source'),['naver','google','daum','bing','kakao','youtube','instagram','facebook','chatgpt','direct'],true),utmTerm:allowed(params.get('utm_term'),safeTerms,false),campaign:allowed(params.get('utm_campaign'),['tvut','amplaza','reallive','whatever','sixhour'],true)};
+      var eventBody=JSON.stringify({source:source,path:location.pathname,detail:detail});
       if (!navigator.sendBeacon || !navigator.sendBeacon('/api/traffic',new Blob([eventBody],{type:'text/plain'}))) {
         fetch('/api/traffic',{method:'POST',headers:{'Content-Type':'text/plain'},body:eventBody,credentials:'same-origin',keepalive:true}).catch(function(){});
       }

@@ -1,6 +1,6 @@
 import credential from './credential.json';
 import entries from './catalog.json';
-import {loginPage, dashboardPage, postsPage, analyticsPage, passwordPage, seoPage, indexNowPage, articleEditor, staticEditor} from '../../scripts/admin-view.mjs';
+import {loginPage, dashboardPage, postsPage, analyticsPage, passwordPage, seoPage, indexNowPage, articleEditor, staticEditor, inflowsPage} from '../../scripts/admin-view.mjs';
 import {fetchAnalytics} from '../../scripts/admin-analytics.mjs';
 import {fetchSearch} from '../../scripts/admin-search.mjs';
 import {saveNaverReport, readNaverReport} from '../../scripts/admin-naver.mjs';
@@ -8,7 +8,8 @@ import {allowedPath, diagnose, submitIndexNow} from '../../scripts/admin-seo.mjs
 import {articleList, articleGet, articleSave, articlePublish, articleRestore, articleHasRevision, renderArticle} from '../../scripts/admin-articles.mjs';
 import {permitted,originalPage,fields,fingerprint,getStatic,saveStatic,publishStatic,restoreStatic,applyChanges} from '../../scripts/admin-static-editor.mjs';
 import {fetchRealtime} from '../../scripts/admin-realtime.mjs';
-import {readSources} from '../../scripts/realtime-sources.mjs';
+import {readSources,isAllowedSource} from '../../scripts/realtime-sources.mjs';
+import {readEvents} from '../../scripts/inflow-events.mjs';
 
 const origin = 'https://tvut.3678dairy.com';
 const cookieName = '__Host-tvut_admin';
@@ -197,10 +198,10 @@ export async function onRequest({request,env}) {
     return redirect('/admin/', sessionCookie(token, lifetime));
   }
   if (request.method !== 'GET' && request.method !== 'HEAD') return respond(null, 405, {Allow:'GET, HEAD, POST'});
-  if (!['/admin', '/admin/login', '/admin/posts', '/admin/analytics', '/admin/password','/admin/seo','/admin/indexnow','/admin/article','/admin/article-preview','/admin/static-edit','/admin/static-preview','/admin/realtime-data','/admin/realtime-sources-data'].includes(route)) return respond('페이지를 찾을 수 없습니다.', 404);
+  if (!['/admin', '/admin/login', '/admin/posts', '/admin/analytics', '/admin/password','/admin/seo','/admin/indexnow','/admin/article','/admin/article-preview','/admin/static-edit','/admin/static-preview','/admin/realtime-data','/admin/realtime-sources-data','/admin/inflows','/admin/inflows-data'].includes(route)) return respond('페이지를 찾을 수 없습니다.', 404);
   let record;
   try { record = await currentCredential(env); }
-  catch { return ['/admin/realtime-data','/admin/realtime-sources-data'].includes(route) ? jsonRespond({error:'관리자 인증 저장소에 연결할 수 없습니다.'},503) : respond('관리자 인증 저장소에 연결할 수 없습니다.',503); }
+  catch { return ['/admin/realtime-data','/admin/realtime-sources-data','/admin/inflows-data'].includes(route) ? jsonRespond({error:'관리자 인증 저장소에 연결할 수 없습니다.'},503) : respond('관리자 인증 저장소에 연결할 수 없습니다.',503); }
   const authenticated = await signedIn(request,record);
   if (route === '/admin/realtime-data') {
     if (!authenticated) return jsonRespond({error:'로그인이 필요합니다.'},401);
@@ -214,10 +215,19 @@ export async function onRequest({request,env}) {
     try { return jsonRespond(await readSources(env.TVUT_ADMIN_DB)); }
     catch { return jsonRespond({error:'실시간 유입 경로를 불러오지 못했습니다.'},503); }
   }
-  if (!authenticated && ['/admin/posts','/admin/analytics','/admin/password','/admin/seo','/admin/indexnow','/admin/article','/admin/article-preview','/admin/static-edit','/admin/static-preview'].includes(route)) return redirect('/admin/');
+  if (route === '/admin/inflows-data') {
+    if (!authenticated) return jsonRespond({error:'로그인이 필요합니다.'},401);
+    if (request.method === 'HEAD') return new Response(null,{status:200,headers:{'Cache-Control':'private, no-store'}});
+    const source=url.searchParams.get('source') || '', path=(url.searchParams.get('path') || '').trim();
+    if ((source && !isAllowedSource(source)) || path.length>120) return jsonRespond({error:'검색 조건을 확인해 주세요.'},400);
+    try { return jsonRespond(await readEvents(env.TVUT_ADMIN_DB,{source,path})); }
+    catch { return jsonRespond({error:'유입 기록을 불러오지 못했습니다.'},503); }
+  }
+  if (!authenticated && ['/admin/posts','/admin/analytics','/admin/password','/admin/seo','/admin/indexnow','/admin/article','/admin/article-preview','/admin/static-edit','/admin/static-preview','/admin/inflows'].includes(route)) return redirect('/admin/');
   if (request.method === 'HEAD') return respond(null);
   if (!authenticated) return respond(loginPage(false,url.searchParams.get('password') === 'changed'));
   if (route === '/admin/password') return respond(passwordPage());
+  if (route === '/admin/inflows') return respond(inflowsPage());
   if (route === '/admin/static-edit' || route === '/admin/static-preview') {
     const path=url.searchParams.get('path') || '';
     if (!permitted(path,entries)) return respond('수정할 수 없는 페이지입니다.',400);
