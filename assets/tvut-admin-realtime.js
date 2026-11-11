@@ -23,7 +23,7 @@
       });
       status.textContent='마지막 확인 '+new Date(data.checkedAt).toLocaleTimeString('ko-KR',{timeZone:'Asia/Seoul',hour:'2-digit',minute:'2-digit',second:'2-digit'})+' · 화면을 보는 동안 1분마다 갱신';
     } catch(error) {
-      status.textContent=(error.message || '실시간 통계를 조회하지 못했습니다.')+' 이전에 표시된 값은 갱신되지 않았습니다.';
+      status.textContent=(error instanceof TypeError?'실시간 통계 연결에 실패했습니다.':(error.message || '실시간 통계를 조회하지 못했습니다.'))+' 이전에 표시된 값은 갱신되지 않았습니다.';
     } finally { busy=false; button.disabled=false; }
   }
   button.addEventListener('click',refresh);
