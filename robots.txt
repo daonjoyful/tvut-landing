@@ -1,4 +1,5 @@
 User-agent: *
+Disallow: /admin
 Allow: /
 Sitemap: https://tvut.3678dairy.com/sitemap.xml
 
