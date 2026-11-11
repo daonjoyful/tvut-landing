@@ -5,9 +5,9 @@ function escape(value) {
 function documentPage(title, body) {
   return '<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex,nofollow"><link rel="stylesheet" href="/assets/tvut-admin.css"><title>' + title + ' · 티벗 관리자</title></head><body>' + body + '</body></html>';
 }
-export function loginPage(failed) {
+export function loginPage(failed, changed = false) {
   return documentPage('로그인', `<main class="login"><section class="login-card"><div class="brand"><i aria-hidden="true">티</i>티벗 운영</div>
-    <h1>관리자 로그인</h1><form action="/admin/login" method="post">
+    <h1>관리자 로그인</h1>${changed ? '<p>비밀번호가 변경됐습니다. 새 비밀번호로 로그인해 주세요.</p>' : ''}<form action="/admin/login" method="post">
     <label for="username">아이디</label><input id="username" name="username" value="admin" autocomplete="username" required>
     <label for="password">비밀번호</label><div class="password-field"><input id="password" name="password" type="password" autocomplete="current-password" maxlength="100" required autofocus><button class="password-toggle" type="button" aria-label="비밀번호 보기" aria-pressed="false" aria-controls="password" hidden><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
     ${failed ? '<p class="error" role="alert">아이디와 비밀번호를 확인해 주세요.</p>' : ''}
@@ -16,9 +16,17 @@ export function loginPage(failed) {
 function workspace(title, content) {
   return documentPage(title, `<div class="workspace"><aside><div class="brand"><i aria-hidden="true">티</i>티벗 관리자</div><nav aria-label="관리 메뉴">
     <a href="/admin/" ${title === '대시보드' ? 'aria-current="page"' : ''}>대시보드</a><a href="/admin/posts" ${title === '게시글' ? 'aria-current="page"' : ''}>게시글</a>
-    <a href="/admin/analytics" ${title === '방문 통계' ? 'aria-current="page"' : ''}>방문 통계</a></nav></aside><div><header><span>티벗 사이트 관리</span><div>
+    <a href="/admin/analytics" ${title === '방문 통계' ? 'aria-current="page"' : ''}>방문 통계</a><a href="/admin/password" ${title === '비밀번호 변경' ? 'aria-current="page"' : ''}>비밀번호 변경</a></nav></aside><div><header><span>티벗 사이트 관리</span><div>
     <a href="/" target="_blank" rel="noopener">사이트 보기 ↗</a><form method="post" action="/admin/logout"><button>로그아웃</button></form></div></header>
     <main class="content"><h1>${title}</h1>${content}</main></div></div>`);
+}
+export function passwordPage(error = '') {
+  return workspace('비밀번호 변경', `<section class="panel password-settings"><form action="/admin/password" method="post">
+  <label for="current">현재 비밀번호</label><input id="current" name="current" type="password" autocomplete="current-password" required>
+  <label for="next">새 비밀번호</label><input id="next" name="next" type="password" autocomplete="new-password" minlength="12" maxlength="128" required>
+  <label for="confirm">새 비밀번호 확인</label><input id="confirm" name="confirm" type="password" autocomplete="new-password" minlength="12" maxlength="128" required>
+  <p>새 비밀번호는 12자 이상 입력해 주세요. 변경 후 다시 로그인합니다.</p>
+  ${error ? `<p class="password-error" role="alert">${escape(error)}</p>` : ''}<button class="primary">비밀번호 변경</button></form></section>`);
 }
 function rows(entries) {
   return '<ul class="entries">' + entries.map(entry => `<li><a href="${escape(entry.url)}" target="_blank" rel="noopener"><span><small>${escape(entry.program)} · ${entry.date ? escape(entry.date) : '프로그램 안내'}</small><strong>${escape(entry.title)}</strong></span><span aria-hidden="true">↗</span></a></li>`).join('') + '</ul>';
