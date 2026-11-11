@@ -17,7 +17,7 @@ export function loginPage(failed, changed = false) {
 function workspace(title, content) {
   return documentPage(title, `<div class="workspace"><aside><div class="brand"><i aria-hidden="true">티</i>티벗 관리자</div><nav aria-label="관리 메뉴">
     <a href="/admin/" ${title === '대시보드' ? 'aria-current="page"' : ''}>대시보드</a><a href="/admin/posts" ${title === '게시글' ? 'aria-current="page"' : ''}>게시글</a>
-    <a href="/admin/analytics" ${title === '방문 통계' ? 'aria-current="page"' : ''}>방문 통계</a><a href="/admin/password" ${title === '비밀번호 변경' ? 'aria-current="page"' : ''}>비밀번호 변경</a></nav></aside><div><header><span>티벗 사이트 관리</span><div>
+    <a href="/admin/analytics" ${title === '방문 통계' ? 'aria-current="page"' : ''}>방문 통계</a><a href="/admin/seo" ${title === 'SEO 진단' ? 'aria-current="page"' : ''}>SEO 진단</a><a href="/admin/indexnow" ${title === 'IndexNow' ? 'aria-current="page"' : ''}>IndexNow</a><a href="/admin/password" ${title === '비밀번호 변경' ? 'aria-current="page"' : ''}>비밀번호 변경</a></nav></aside><div><header><span>티벗 사이트 관리</span><div>
     <a href="/" target="_blank" rel="noopener">사이트 보기 ↗</a><form method="post" action="/admin/logout"><button>로그아웃</button></form></div></header>
     <main class="content"><h1>${title}</h1>${content}</main></div></div>`);
 }
@@ -60,6 +60,23 @@ export function postsPage(entries, search) {
     <input type="search" id="q" name="q" value="${escape(term)}" maxlength="150" placeholder="제목, 프로그램, 주소"><button class="primary">검색</button></div></form>
     <div class="heading"><h2>${term ? '검색 결과' : '공개 글'} ${filtered.length}개</h2>${term ? '<a href="/admin/posts">전체 보기</a>' : ''}</div>
     ${filtered.length ? rows(filtered) : '<p>일치하는 게시글이 없습니다.</p>'}</section>`);
+}
+function pageOptions(entries, selected) {
+  const pages = [{url:'/',title:'티벗 메인페이지'},...entries.filter(e=>e.url !== '/')];
+  return pages.map(e=>`<option value="${escape(e.url)}" ${e.url===selected?'selected':''}>${escape(e.title)} · ${escape(e.url)}</option>`).join('');
+}
+export function seoPage(entries, path='/', result=null, error='') {
+  const item = (label, value, ok, detail='') => `<li><strong>${escape(label)}</strong><span class="seo-state ${ok?'ok':'attention'}">${ok?'확인':'확인 필요'}</span><div>${escape(value || '설정되지 않음')}</div>${detail?'<small>'+escape(detail)+'</small>':''}</li>`;
+  return workspace('SEO 진단', `<section class="panel"><form method="get" action="/admin/seo" class="seo-form"><label for="seo-path">진단할 공개 페이지</label><select id="seo-path" name="path">${pageOptions(entries,path)}</select><button class="primary">진단하기</button></form><p>현재 공개된 HTML을 확인합니다. 검색엔진의 실제 수집·색인 여부나 robots.txt 전체 설정은 확인하지 않습니다.</p>${error?'<p class="error" role="alert">'+escape(error)+'</p>':''}${result?`<ul class="seo-list">${item('HTTP 응답',String(result.status),result.status===200,'200이 아닌 응답은 별도 확인이 필요합니다.')}${item('페이지 제목',result.title,Boolean(result.title))}${item('검색 설명',result.description,Boolean(result.description))}${item('대표 이미지 (og:image)',result.image,Boolean(result.image),'주소 유무만 확인하며 이미지 접근 가능 여부는 확인하지 않습니다.')}${item('대표 URL',result.canonical,Boolean(result.canonical) && result.canonicalMatches,'선택한 페이지의 주소와 일치하는지 확인합니다.')}${item('색인 제한 메타 / HTTP 헤더',[result.robots,result.robotsHeader].filter(Boolean).join(' / ') || 'noindex 미발견',!result.hasNoindex,'일반 robots 메타와 X-Robots-Tag만 확인합니다.')}</ul>`:''}</section>`);
+}
+export function indexNowPage(entries, path='/', result=null, error='') {
+  let message = '';
+  if (result !== null) {
+    if (result === 200) message = '네이버가 요청을 정상 수신했습니다 (HTTP 200).';
+    else if (result === 202) message = '네이버가 요청을 접수했으며 키 확인 중입니다 (HTTP 202).';
+    else message = '요청에 실패했습니다 (HTTP '+result+'). 키, 주소 또는 네이버 서비스 상태를 확인해 주세요.';
+  }
+  return workspace('IndexNow', `<section class="panel"><p>신규 또는 변경된 공개 페이지를 네이버에 알립니다. 참여 검색엔진에 공유될 수 있으며 검색 색인을 보장하지 않습니다.</p><form method="post" action="/admin/indexnow" class="seo-form"><label for="index-path">변경된 페이지</label><select id="index-path" name="path">${pageOptions(entries,path)}</select><button class="primary">변경 페이지 제출</button></form>${message?'<p role="status">'+escape(message)+'</p>':''}${error?'<p class="error" role="alert">'+escape(error)+'</p>':''}<p>동일 페이지를 변경 없이 반복 제출하지 마세요.</p></section>`);
 }
 export function analyticsPage(reports, selected, error='', search=null, searchError='', query='', naver=null) {
   const periods = {today:'오늘',yesterday:'어제','7days':'7일','14days':'14일','30days':'30일','60days':'60일','90days':'90일'};
