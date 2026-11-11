@@ -16,7 +16,7 @@ export function loginPage(failed) {
 function workspace(title, content) {
   return documentPage(title, `<div class="workspace"><aside><div class="brand"><i aria-hidden="true">티</i>티벗 관리자</div><nav aria-label="관리 메뉴">
     <a href="/admin/" ${title === '대시보드' ? 'aria-current="page"' : ''}>대시보드</a><a href="/admin/posts" ${title === '게시글' ? 'aria-current="page"' : ''}>게시글</a>
-    <a href="${analytics}" target="_blank" rel="noopener noreferrer">방문 통계 ↗</a></nav></aside><div><header><span>티벗 사이트 관리</span><div>
+    <a href="/admin/analytics" ${title === '방문 통계' ? 'aria-current="page"' : ''}>방문 통계</a></nav></aside><div><header><span>티벗 사이트 관리</span><div>
     <a href="/" target="_blank" rel="noopener">사이트 보기 ↗</a><form method="post" action="/admin/logout"><button>로그아웃</button></form></div></header>
     <main class="content"><h1>${title}</h1>${content}</main></div></div>`);
 }
@@ -38,4 +38,17 @@ export function postsPage(entries, search) {
     <input type="search" id="q" name="q" value="${escape(term)}" maxlength="150" placeholder="제목, 프로그램, 주소"><button class="primary">검색</button></div></form>
     <div class="heading"><h2>${term ? '검색 결과' : '공개 글'} ${filtered.length}개</h2>${term ? '<a href="/admin/posts">전체 보기</a>' : ''}</div>
     ${filtered.length ? rows(filtered) : '<p>일치하는 게시글이 없습니다.</p>'}</section>`);
+}
+export function analyticsPage(reports, selected, error='') {
+  const periods = {today:'오늘',yesterday:'어제','7days':'7일','14days':'14일','30days':'30일','60days':'60일','90days':'90일'};
+  const buttons = Object.entries(periods).map(([key,label]) => `<a href="/admin/analytics?period=${key}" class="period ${selected===key?'active':''}">${label}</a>`).join('');
+  if (!reports) return workspace('방문 통계', `<section class="panel"><p class="error">${escape(error)}</p></section>`);
+  const [daily,sources,landing,terms] = reports;
+  const table = (rows, labels) => '<div class="table-wrap"><table><thead><tr>' + labels.map(label=>'<th>'+label+'</th>').join('') + '</tr></thead><tbody>' + rows.map(row=>'<tr>'+row.dimensions.map(value=>'<td>'+escape(value)+'</td>').join('')+'<td>'+row.value.toLocaleString('ko-KR')+'</td></tr>').join('')+'</tbody></table></div>';
+  const views = daily.reduce((sum,row)=>sum+row.value,0);
+  return workspace('방문 통계', `<div class="periods">${buttons}</div><section class="cards"><article><span>페이지 조회수</span><b>${views.toLocaleString('ko-KR')}</b></article></section><div class="panels">
+  <section class="panel"><h2>날짜별 조회수</h2>${table(daily.sort((a,b)=>b.dimensions[0].localeCompare(a.dimensions[0])),['날짜','조회수'])}</section>
+  <section class="panel"><h2>유입 경로</h2>${table(sources.sort((a,b)=>b.value-a.value),['출처 / 매체','세션'])}</section></div>
+  <section class="panel"><h2>도착 페이지와 유입 경로</h2>${table(landing.sort((a,b)=>b.value-a.value),['도착 페이지','출처 / 매체','세션'])}</section>
+  <section class="panel"><h2>캠페인 검색어와 도착 페이지</h2>${terms.filter(row=>row.dimensions[0] && row.dimensions[0]!=='(not set)').length ? table(terms.filter(row=>row.dimensions[0] && row.dimensions[0]!=='(not set)').sort((a,b)=>b.value-a.value),['캠페인 검색어','도착 페이지','세션']) : '<p>선택한 기간에 수집된 캠페인 검색어가 없습니다.</p>'}<p>UTM 캠페인에 입력된 검색어입니다. 자연검색 검색어는 Google Search Console 또는 네이버 서치어드바이저 자료가 필요합니다.</p></section>`);
 }

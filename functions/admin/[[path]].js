@@ -1,6 +1,7 @@
 import credential from './credential.json';
 import entries from './catalog.json';
-import {loginPage, dashboardPage, postsPage} from '../../scripts/admin-view.mjs';
+import {loginPage, dashboardPage, postsPage, analyticsPage} from '../../scripts/admin-view.mjs';
+import {fetchAnalytics} from '../../scripts/admin-analytics.mjs';
 
 const origin = 'https://tvut.3678dairy.com';
 const cookieName = '__Host-tvut_admin';
@@ -80,7 +81,7 @@ async function loginForm(request) {
     }
   } finally { reader.releaseLock(); }
 }
-export async function onRequest({request}) {
+export async function onRequest({request,env}) {
   const url = new URL(request.url);
   if (url.origin !== origin) return request.method === 'GET' ? redirect(origin + '/admin/') : respond('접속 주소를 확인해 주세요.', 403);
   const route = url.pathname.replace(/\/$/, '');
@@ -97,10 +98,15 @@ export async function onRequest({request}) {
     return redirect('/admin/', sessionCookie(token, lifetime));
   }
   if (request.method !== 'GET' && request.method !== 'HEAD') return respond(null, 405, {Allow:'GET, HEAD, POST'});
-  if (!['/admin', '/admin/login', '/admin/posts'].includes(route)) return respond('페이지를 찾을 수 없습니다.', 404);
+  if (!['/admin', '/admin/login', '/admin/posts', '/admin/analytics'].includes(route)) return respond('페이지를 찾을 수 없습니다.', 404);
   const authenticated = await signedIn(request);
-  if (!authenticated && route === '/admin/posts') return redirect('/admin/');
+  if (!authenticated && ['/admin/posts','/admin/analytics'].includes(route)) return redirect('/admin/');
   if (request.method === 'HEAD') return respond(null);
   if (!authenticated) return respond(loginPage(false));
+  if (route === '/admin/analytics') {
+    const period = url.searchParams.get('period') || '30days';
+    try { return respond(analyticsPage(await fetchAnalytics(env,period),period)); }
+    catch (error) { return respond(analyticsPage(null,period,error.message)); }
+  }
   return respond(route === '/admin/posts' ? postsPage(entries, url.searchParams.get('q') || '') : dashboardPage(entries));
 }
