@@ -5,13 +5,18 @@ if (!file) throw new Error('Usage: node scripts/summarize-review.mjs input.json'
 if (!process.env.OPENAI_API_KEY) throw new Error('OPENAI_API_KEY is required for automatic review writing');
 
 const item = JSON.parse(await fs.readFile(file, 'utf8'));
-const prompt = `Write an original Korean broadcast review from the transcript below. Never copy dialogue verbatim. Do not invent names, locations, prices, medical claims, or facts that are not supported by the transcript. The review must be useful to readers aged 65 and older. Return only JSON with this shape: {"intro":"2 short paragraphs separated by a blank line","sections":[{"heading":"a concise factual topic heading","paragraphs":["one paragraph of 3-4 lines","another paragraph of 3-4 lines"]}],"audiencePoint":"one practical viewing point"}. Create 2 to 5 sections. Each heading must summarize the section topic, not use labels like '주요 내용 1'. Keep the tone factual and readable.
+// Optionally use the authenticated administrator's downloaded guide.
+const guide = await fs.readFile(process.argv[3] || new URL('./tvut-writing-guide.txt', import.meta.url), 'utf8');
+const prompt = `${guide}
 
-Use 해요체 consistently throughout the intro, headings, and body. Do not use 반말체, 합니다체, or mixed honorific styles.
+출력은 JSON 객체만 사용한다. 기존 페이지 생성기와의 호환을 위해 다음 필드를 사용한다:
+{"intro":"도입문", "sections":[{"heading":"소제목", "paragraphs":["문단"]}], "audiencePoint":"독자가 확인할 다음 행동"}.
+최소 두 개의 내용을 담은 sections를 사용한다. 실제 HTML이나 버튼 URL을 생성하지 않는다. 자료에 없는 내용은 추정하지 않는다.
 
-Program: ${item.program}
-Broadcast date: ${item.broadcastDate}
-Transcript:
+프로그램: ${item.program}
+방송일: ${item.broadcastDate}
+제목: ${item.title || ''}
+방송 자료:
 ${item.transcript}`;
 
 let response;

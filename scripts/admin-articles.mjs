@@ -6,9 +6,13 @@ export function articleData(form) {
   const title = (form.get('title') || '').trim();
   const description = (form.get('description') || '').trim();
   const body = (form.get('body') || '').trim();
+  const summary = (form.get('summary') || '').trim(), buttonLabel = (form.get('button_label') || '').trim(), buttonUrl = (form.get('button_url') || '').trim();
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || slug.length > 80) throw Error('주소는 영문 소문자, 숫자, 하이픈으로 입력해 주세요.');
   if (!title || title.length > 150 || !description || description.length > 300 || !body || body.length > 50000) throw Error('제목, 검색 설명과 본문을 입력해 주세요.');
-  return {slug,title,description,body};
+  if (summary.length > 3000 || buttonLabel.length > 80 || buttonUrl.length > 2048 || Boolean(buttonLabel) !== Boolean(buttonUrl)) throw Error('요약 또는 버튼을 확인해 주세요.');
+  if (buttonUrl && !(buttonUrl.startsWith('/') && !buttonUrl.startsWith('//')) && !/^https:\/\//i.test(buttonUrl)) throw Error('버튼에는 사이트 내 경로 또는 HTTPS 주소를 사용해 주세요.');
+  if (buttonUrl && /[\s\\\u0000-\u001f]/.test(buttonUrl)) throw Error('버튼 주소를 확인해 주세요.');
+  return {slug,title,description,body,summary,buttonLabel,buttonUrl,layoutVersion:2};
 }
 export async function ensureArticles(db) {
   await db.prepare('CREATE TABLE IF NOT EXISTS admin_articles (slug TEXT PRIMARY KEY, draft TEXT NOT NULL, published TEXT, updated TEXT NOT NULL, published_at TEXT)').run();
@@ -70,9 +74,13 @@ export async function articleHasRevision(db,slug) {
   return Boolean(await db.prepare('SELECT id FROM admin_article_revisions WHERE slug=? LIMIT 1').bind(slug).first());
 }
 export function renderArticle(data, preview = false) {
-  const paras = data.body.split(/\n\s*\n/).map(x=>x.trim()).filter(Boolean).map(x=>'<p>'+escape(x).replace(/\n/g,'<br>')+'</p>').join('');
+  const blocks=data.body.replace(/^(##\s+[^\n]+)\n(?!\n)/gm,'$1\n\n').split(/\n\s*\n|\n(?=##\s)/).map(x=>x.trim()).filter(Boolean);
+  const button = data.buttonLabel && data.buttonUrl ? '<p class="life-cta"><a href="'+escape(data.buttonUrl)+'">'+escape(data.buttonLabel)+'</a></p>' : '';
+  let inserted=false;
+  const paras = data.layoutVersion===2 ? blocks.map((x,i)=>{const heading=/^##\s+(.+)$/.exec(x);if(heading){const prefix=!inserted?(inserted=true,button):'';return prefix+'<h2>'+escape(heading[1])+'</h2>';}return '<p>'+escape(x).replace(/\n/g,'<br>')+'</p>';}).join('')+(inserted?'':button) : blocks.map(x=>'<p>'+escape(x).replace(/\n/g,'<br>')+'</p>').join('');
+  const summary=data.layoutVersion===2 && data.summary ? '<aside class="life-summary"><strong>이 글 요약 정리</strong><ul>'+data.summary.split(/\n/).filter(Boolean).map(x=>'<li>'+escape(x)+'</li>').join('')+'</ul></aside>' : '';
   const url = base+'/review/notice/'+encodeURIComponent(data.slug)+'/';
-  return `<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="${preview?'noindex,nofollow':'index,follow'}"><title>${escape(data.title)}</title><meta name="description" content="${escape(data.description)}"><meta property="og:title" content="${escape(data.title)}"><meta property="og:description" content="${escape(data.description)}"><meta property="og:image" content="${base}/assets/tvut-main-square-v2.jpg"><meta property="og:url" content="${escape(url)}"><link rel="canonical" href="${escape(url)}"><link rel="stylesheet" href="/review.css">${preview?'':'<script defer src="/assets/site-analytics.js?v=2"></script>'}</head><body><header class="review-header"><div class="review-wrap review-header-inner"><a class="review-brand" href="/">티벗 퀴즈 안내</a><nav class="review-nav"><a href="/review/">전체 리뷰</a></nav></div></header><main class="review-main review-wrap"><article class="review-article">${preview?'<p>관리자 미리보기 · 공개되지 않은 내용이 포함될 수 있습니다.</p>':''}<h1>${escape(data.title)}</h1>${paras}<div class="review-actions"><a class="review-button" href="/">티벗 설치·가입 안내</a></div></article></main><footer class="review-footer"><div class="review-wrap"><a href="/">티벗 안내로 돌아가기</a></div></footer></body></html>`;
+  return `<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="${preview?'noindex,nofollow':'index,follow'}"><title>${escape(data.title)}</title><meta name="description" content="${escape(data.description)}"><meta property="og:title" content="${escape(data.title)}"><meta property="og:description" content="${escape(data.description)}"><meta property="og:image" content="${base}/assets/tvut-main-square-v2.jpg"><meta property="og:url" content="${escape(url)}"><link rel="canonical" href="${escape(url)}"><link rel="stylesheet" href="/review.css">${data.layoutVersion===2?'<link rel="stylesheet" href="/assets/life-article.css">':''}${preview?'':'<script defer src="/assets/site-analytics.js?v=2"></script>'}</head><body><header class="review-header"><div class="review-wrap review-header-inner"><a class="review-brand" href="/">티벗 퀴즈 안내</a><nav class="review-nav"><a href="/review/">전체 리뷰</a></nav></div></header><main class="review-main review-wrap"><article class="review-article${data.layoutVersion===2?' life-article':''}">${preview?'<p>관리자 미리보기 · 공개되지 않은 내용이 포함될 수 있습니다.</p>':''}<h1>${escape(data.title)}</h1>${summary}${paras}${data.layoutVersion===2?'':'<div class="review-actions"><a class="review-button" href="/">티벗 설치·가입 안내</a></div>'}</article></main><footer class="review-footer"><div class="review-wrap"><a href="/">티벗 안내로 돌아가기</a></div></footer></body></html>`;
 }
 export function renderArticleIndex(rows) {
   const items = rows.map(row=>{const a=JSON.parse(row.published);return `<li><a href="/review/notice/${escape(encodeURIComponent(row.slug))}/"><strong>${escape(a.title)}</strong></a><p>${escape(a.description)}</p></li>`}).join('');

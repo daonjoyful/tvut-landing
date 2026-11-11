@@ -1,0 +1,8 @@
+@font-face{font-family:'S-Core Dream';src:url('/assets/fonts/s-core-dream/SCDream5.otf') format('opentype');font-weight:500;font-style:normal;font-display:swap}
+.life-article{font-family:'S-Core Dream','Noto Sans KR',sans-serif;font-weight:500;color:#171717;line-height:1.5}
+.life-article p,.life-article li{font-size:18px;line-height:1.5;word-break:keep-all;overflow-wrap:anywhere}
+.life-article h2{margin:42px 0 18px;padding:10px 0 10px 18px;border-left:5px solid #3469d8;color:#17233b;line-height:1.4}
+.life-summary{margin:24px 0;padding:20px 24px;border:2px dashed #8bb9ec;border-radius:12px;background:#eff7ff;color:#1e4c84}
+.life-summary strong{font-size:18px}.life-summary ul{padding-left:22px;margin:12px 0 0}.life-summary li+li{margin-top:7px}
+.life-cta{margin:28px 0 0!important}.life-cta a{display:block;padding:16px 20px;text-align:center;border-radius:10px;background:#e4473e;color:white;text-decoration:none;font-weight:700;font-size:18px}.life-cta a:hover{background:#bd322a}.life-cta a:focus-visible{outline:3px solid #175bcc;outline-offset:3px}
+@media(max-width:760px){.life-article p,.life-article li{font-size:17px;line-height:1.6}.life-summary{padding:17px}.life-cta a{font-size:17px}}

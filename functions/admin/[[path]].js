@@ -1,6 +1,7 @@
 import credential from './credential.json';
 import entries from './catalog.json';
-import {loginPage, dashboardPage, postsPage, analyticsPage, passwordPage, seoPage, indexNowPage, articleEditor, staticEditor, inflowsPage} from '../../scripts/admin-view.mjs';
+import {loginPage, dashboardPage, postsPage, analyticsPage, passwordPage, seoPage, indexNowPage, articleEditor, staticEditor, inflowsPage, writingGuidePage} from '../../scripts/admin-view.mjs';
+import {defaultGuide} from '../../scripts/admin-writing-guide.mjs';
 import {fetchAnalytics} from '../../scripts/admin-analytics.mjs';
 import {fetchSearch} from '../../scripts/admin-search.mjs';
 import {saveNaverReport, readNaverReport} from '../../scripts/admin-naver.mjs';
@@ -73,7 +74,7 @@ function respond(body, status = 200, extra = {}) {
     'Content-Type':'text/html; charset=utf-8', 'Cache-Control':'private, no-store',
     'X-Robots-Tag':'noindex, nofollow, noarchive', 'Referrer-Policy':'same-origin',
     'X-Frame-Options':'DENY', 'X-Content-Type-Options':'nosniff',
-    'Content-Security-Policy':"default-src 'none'; script-src 'self'; connect-src 'self'; style-src 'self'; img-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+    'Content-Security-Policy':"default-src 'none'; script-src 'self'; connect-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
     ...extra
   }});
 }
@@ -89,6 +90,10 @@ function sessionCookie(value, age) {
 async function searchableEntries(env) {
   const articles = await articleList(env.TVUT_ADMIN_DB);
   return [...entries,...articles.filter(row=>row.published).map(row=>({url:'/review/notice/'+row.slug+'/',title:JSON.parse(row.published).title,program:'관리자 작성',date:''}))];
+}
+async function getWritingGuide(db) {
+  await db.prepare('CREATE TABLE IF NOT EXISTS admin_writing_guide (id INTEGER PRIMARY KEY, guide TEXT NOT NULL, updated TEXT NOT NULL)').run();
+  return (await db.prepare('SELECT guide,updated FROM admin_writing_guide WHERE id=1').first()) || {guide:defaultGuide,updated:''};
 }
 async function loginForm(request, limit = 1024) {
   const reader = request.body?.getReader();
@@ -136,15 +141,23 @@ export async function onRequest({request,env}) {
   if (request.method === 'POST') {
     if (request.headers.get('Origin') !== origin) return respond('요청 출처를 확인해 주세요.', 403);
     if (route === '/admin/logout') return redirect('/admin/', sessionCookie('', 0));
-    if (!['/admin/login','/admin/password','/admin/naver-report','/admin/indexnow','/admin/article-save','/admin/article-publish','/admin/article-restore','/admin/static-save','/admin/static-publish','/admin/static-restore'].includes(route)) return respond('페이지를 찾을 수 없습니다.', 404);
+    if (!['/admin/login','/admin/password','/admin/naver-report','/admin/indexnow','/admin/article-save','/admin/article-publish','/admin/article-restore','/admin/static-save','/admin/static-publish','/admin/static-restore','/admin/writing-guide'].includes(route)) return respond('페이지를 찾을 수 없습니다.', 404);
     if (!request.headers.get('Content-Type')?.startsWith('application/x-www-form-urlencoded')) return respond('입력 형식을 확인해 주세요.', 415);
-    const limit = ['/admin/article-save','/admin/static-save'].includes(route) ? 600000 : route === '/admin/naver-report' ? 65536 : 1024;
+    const limit = ['/admin/article-save','/admin/static-save'].includes(route) ? 600000 : route === '/admin/writing-guide' ? 300000 : route === '/admin/naver-report' ? 65536 : 1024;
     if (Number(request.headers.get('Content-Length')) > limit) return respond('입력이 너무 깁니다.', 413);
     const form = await loginForm(request,limit);
     if (!form) return respond('입력이 너무 깁니다.', 413);
     let record;
     try { record = await currentCredential(env); }
     catch { return respond('관리자 인증 저장소에 연결할 수 없습니다.',503); }
+    if (route === '/admin/writing-guide') {
+      if (!await signedIn(request,record)) return redirect('/admin/');
+      const guide = (form.get('guide') || '').trim();
+      if (!guide || guide.length > 30000) return respond(writingGuidePage(guide,'','지침은 1자 이상 30,000자 이하로 입력해 주세요.'),400);
+      try { await getWritingGuide(env.TVUT_ADMIN_DB); await env.TVUT_ADMIN_DB.prepare('INSERT INTO admin_writing_guide(id,guide,updated) VALUES(1,?,?) ON CONFLICT(id) DO UPDATE SET guide=excluded.guide,updated=excluded.updated').bind(guide,new Date().toISOString()).run(); }
+      catch { return respond('작성 지침을 저장하지 못했습니다.',503); }
+      return redirect('/admin/writing-guide?saved=1');
+    }
     if (['/admin/static-save','/admin/static-publish','/admin/static-restore'].includes(route)) {
       if (!await signedIn(request,record)) return redirect('/admin/');
       const path=form.get('path') || '';
@@ -168,6 +181,7 @@ export async function onRequest({request,env}) {
           const oldSlug = form.get('old_slug');
           let old = null; try { if (oldSlug) { old = await articleGet(env.TVUT_ADMIN_DB,oldSlug); if (old) old = {...old,updated:form.get('version') || ''}; } } catch {}
           const values = Object.fromEntries(['slug','title','description','body'].map(key=>[key,(form.get(key)||'').slice(0,key==='body'?50000:300)]));
+          values.summary=(form.get('summary')||'').slice(0,3000); values.buttonLabel=(form.get('button_label')||'').slice(0,80); values.buttonUrl=(form.get('button_url')||'').slice(0,2048);
           return respond(articleEditor(old,'저장하지 못했습니다. 주소 중복이나 입력값, 동시 수정 여부를 확인해 주세요.',false,values),400);
         }
         return respond('발행 또는 복구하지 못했습니다. 글이 변경되었거나 복구할 이전 발행본이 없습니다. 이전 화면에서 다시 확인해 주세요.',400);
@@ -198,7 +212,7 @@ export async function onRequest({request,env}) {
     return redirect('/admin/', sessionCookie(token, lifetime));
   }
   if (request.method !== 'GET' && request.method !== 'HEAD') return respond(null, 405, {Allow:'GET, HEAD, POST'});
-  if (!['/admin', '/admin/login', '/admin/posts', '/admin/analytics', '/admin/password','/admin/seo','/admin/indexnow','/admin/article','/admin/article-preview','/admin/static-edit','/admin/static-preview','/admin/realtime-data','/admin/realtime-sources-data','/admin/inflows','/admin/inflows-data'].includes(route)) return respond('페이지를 찾을 수 없습니다.', 404);
+  if (!['/admin', '/admin/login', '/admin/posts', '/admin/analytics', '/admin/password','/admin/seo','/admin/indexnow','/admin/article','/admin/article-preview','/admin/static-edit','/admin/static-preview','/admin/realtime-data','/admin/realtime-sources-data','/admin/inflows','/admin/inflows-data','/admin/writing-guide','/admin/writing-guide-download'].includes(route)) return respond('페이지를 찾을 수 없습니다.', 404);
   let record;
   try { record = await currentCredential(env); }
   catch { return ['/admin/realtime-data','/admin/realtime-sources-data','/admin/inflows-data'].includes(route) ? jsonRespond({error:'관리자 인증 저장소에 연결할 수 없습니다.'},503) : respond('관리자 인증 저장소에 연결할 수 없습니다.',503); }
@@ -223,9 +237,13 @@ export async function onRequest({request,env}) {
     try { return jsonRespond(await readEvents(env.TVUT_ADMIN_DB,{source,path})); }
     catch { return jsonRespond({error:'유입 기록을 불러오지 못했습니다.'},503); }
   }
-  if (!authenticated && ['/admin/posts','/admin/analytics','/admin/password','/admin/seo','/admin/indexnow','/admin/article','/admin/article-preview','/admin/static-edit','/admin/static-preview','/admin/inflows'].includes(route)) return redirect('/admin/');
+  if (!authenticated && ['/admin/posts','/admin/analytics','/admin/password','/admin/seo','/admin/indexnow','/admin/article','/admin/article-preview','/admin/static-edit','/admin/static-preview','/admin/inflows','/admin/writing-guide','/admin/writing-guide-download'].includes(route)) return redirect('/admin/');
   if (request.method === 'HEAD') return respond(null);
   if (!authenticated) return respond(loginPage(false,url.searchParams.get('password') === 'changed'));
+  if (route === '/admin/writing-guide' || route === '/admin/writing-guide-download') {
+    try { const saved=await getWritingGuide(env.TVUT_ADMIN_DB); if (route.endsWith('-download')) return new Response(saved.guide,{headers:{'Content-Type':'text/plain; charset=utf-8','Content-Disposition':'attachment; filename="tvut-writing-guide.txt"','Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'}}); return respond(writingGuidePage(saved.guide,saved.updated,url.searchParams.has('saved')?'작성 지침을 저장했습니다.':'')); }
+    catch { return respond('작성 지침을 불러오지 못했습니다.',503); }
+  }
   if (route === '/admin/password') return respond(passwordPage());
   if (route === '/admin/inflows') return respond(inflowsPage());
   if (route === '/admin/static-edit' || route === '/admin/static-preview') {
