@@ -5,7 +5,7 @@ export async function onRequest({request,env}) {
   const url = new URL(request.url);
   if (url.pathname === '/review/notice/') {
     const rows = await publishedArticles(env.TVUT_ADMIN_DB);
-    return new Response(request.method === 'HEAD' ? null : renderArticleIndex(rows),{headers:{'Content-Type':'text/html; charset=utf-8','Cache-Control':'public, max-age=60','X-Content-Type-Options':'nosniff'}});
+    return new Response(request.method === 'HEAD' ? null : renderArticleIndex(rows,url.searchParams.get('category')),{headers:{'Content-Type':'text/html; charset=utf-8','Cache-Control':'public, max-age=60','X-Content-Type-Options':'nosniff'}});
   }
   const match = url.pathname.match(/^\/review\/notice\/([a-z0-9]+(?:-[a-z0-9]+)*)\/$/);
   if (!match) return new Response('찾을 수 없습니다.',{status:404});
