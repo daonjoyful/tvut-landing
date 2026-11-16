@@ -3,6 +3,7 @@ import {linkCatalog,appendRelated} from './scripts/admin-links.mjs';
 const entries=[{url:'/review/notice/install/',title:'티벗 앱 설치 방법 안내'},{url:'/review/amplaza/',title:'아침마당 돌발퀴즈 참여 방법'}];
 const articles=[{slug:'tvut-login',published:JSON.stringify({title:'티벗 로그인 방법',body:'[도움말](https://daonjoyful.com/help/)'})},{slug:'draft',published:null}];
 const links=linkCatalog([],entries,articles);
+assert.equal(linkCatalog([{url:'tel:027811000',labels:['전화'],sources:['/review/sixhour/']}],[],[])[0].url,'tel:027811000');
 assert(links.some(x=>x.url==='https://daonjoyful.com/help/'));
 assert(!links.some(x=>x.url.includes('/draft/')));
 const result=appendRelated('첫 문단','티벗 앱 설치 방법','new',links);

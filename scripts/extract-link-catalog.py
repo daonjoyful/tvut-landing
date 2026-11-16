@@ -32,7 +32,7 @@ for page in pages:
     for href, label in parser.items:
         absolute = urljoin(origin + source, href)
         parsed = urlsplit(absolute)
-        if parsed.scheme not in ('http', 'https') or not parsed.netloc:
+        if parsed.scheme not in ('http', 'https', 'tel', 'mailto') or (parsed.scheme in ('http', 'https') and not parsed.netloc):
             continue
         item = result.setdefault(absolute, {'url': absolute, 'labels': [], 'sources': []})
         if label and label not in item['labels']: item['labels'].append(label)

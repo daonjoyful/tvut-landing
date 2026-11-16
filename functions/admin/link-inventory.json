@@ -1928,6 +1928,15 @@
     ]
   },
   {
+    "url": "tel:027811000",
+    "labels": [
+      "02-781-1000"
+    ],
+    "sources": [
+      "/review/sixhour/"
+    ]
+  },
+  {
     "url": "https://iaudience.kbs.co.kr/about",
     "labels": [
       "KBS 시청자상담실 이용안내",

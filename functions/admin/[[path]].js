@@ -97,7 +97,11 @@ async function searchableEntries(env) {
   const articles = await articleList(env.TVUT_ADMIN_DB);
   return [...entries,...articles.filter(row=>row.published).map(row=>({url:'/review/notice/'+row.slug+'/',title:JSON.parse(row.published).title,program:'관리자 작성',date:''}))];
 }
-async function allLinks(env){return linkCatalog(staticLinks,entries,await articleList(env.TVUT_ADMIN_DB));}
+async function allLinks(env){
+  const links=linkCatalog(staticLinks,entries,await articleList(env.TVUT_ADMIN_DB));
+  try{const r=await fetch(origin+'/api/today-programs',{signal:AbortSignal.timeout(3000)});const d=await r.json();if(r.ok&&d.available&&typeof d.source==='string'&&/^https:\/\/iaudience\.kbs\.co\.kr\//.test(d.source)){const entry=links.find(x=>x.url===d.source);if(entry){if(!entry.sources.includes('/ (오늘 방송정보)'))entry.sources.push('/ (오늘 방송정보)');}else links.push({url:d.source,labels:['오늘 방송정보'],sources:['/ (스크립트)'],type:'방송정보 API'});}}catch{}
+  return links;
+}
 async function getWritingGuide(db) {
   await db.prepare('CREATE TABLE IF NOT EXISTS admin_writing_guide (id INTEGER PRIMARY KEY, guide TEXT NOT NULL, updated TEXT NOT NULL)').run();
   return (await db.prepare('SELECT guide,updated FROM admin_writing_guide WHERE id=1').first()) || {guide:defaultGuide,updated:''};
