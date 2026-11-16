@@ -1,6 +1,7 @@
 import credential from './credential.json';
 import entries from './catalog.json';
 import staticLinks from './link-inventory.json';
+import relatedArticles from './related-articles.json';
 import {linkCatalog,appendRelated} from '../../scripts/admin-links.mjs';
 import {linksPage} from '../../scripts/admin-view.mjs';
 import {loginPage, dashboardPage, postsPage, analyticsPage, passwordPage, seoPage, indexNowPage, indexingPage, articleEditor, staticEditor, inflowsPage, writingGuidePage, aiUsagePage} from '../../scripts/admin-view.mjs';
@@ -98,7 +99,7 @@ async function searchableEntries(env) {
   return [...entries,...articles.filter(row=>row.published).map(row=>({url:'/review/notice/'+row.slug+'/',title:JSON.parse(row.published).title,program:'관리자 작성',date:''}))];
 }
 async function allLinks(env){
-  const links=linkCatalog(staticLinks,entries,await articleList(env.TVUT_ADMIN_DB));
+  const links=linkCatalog(staticLinks,entries,await articleList(env.TVUT_ADMIN_DB),relatedArticles);
   try{const r=await fetch(origin+'/api/today-programs',{signal:AbortSignal.timeout(3000)});const d=await r.json();if(r.ok&&d.available&&typeof d.source==='string'&&/^https:\/\/iaudience\.kbs\.co\.kr\//.test(d.source)){const entry=links.find(x=>x.url===d.source);if(entry){if(!entry.sources.includes('/ (오늘 방송정보)'))entry.sources.push('/ (오늘 방송정보)');}else links.push({url:d.source,labels:['오늘 방송정보'],sources:['/ (스크립트)'],type:'방송정보 API'});}}catch{}
   return links;
 }

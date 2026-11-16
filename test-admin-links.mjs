@@ -11,4 +11,8 @@ assert(result.includes('/review/notice/install/'));
 assert(!result.includes('/review/amplaza/'));
 assert(!appendRelated('글','상관없는 내용','new',links).includes('함께 읽을 글'));
 assert.equal(appendRelated('[설치](https://tvut.3678dairy.com/review/notice/install/)','티벗 앱 설치 방법','new',links).includes('함께 읽을 글'),false);
+assert(!appendRelated('글','아침마당 오늘 방송','new',links).includes('함께 읽을 글'));
+assert(!appendRelated('글','티벗 도움말','new',links).includes('daonjoyful.com/help/'));
+const approved=linkCatalog([],[],[],[{url:'https://daonjoyful.com/test/',title:'티벗 앱 설치 방법'}]);
+assert(appendRelated('글','티벗 앱 설치 방법','new',approved).includes('daonjoyful.com/test/'));
 console.log('related links: passed');
