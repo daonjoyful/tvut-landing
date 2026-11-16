@@ -32,8 +32,10 @@ export async function diagnose(path, entries, request = fetch) {
   return inspectHtml(data,path,response.status,response.headers.get('x-robots-tag') || '');
 }
 
-export async function submitIndexNow(path, entries, request = fetch) {
+export async function submitIndexNow(path, entries, request = fetch, engine = 'naver') {
   if (!allowedPath(path,entries)) throw Error('목록에 있는 공개 페이지만 제출할 수 있습니다.');
-  const response = await request('https://searchadvisor.naver.com/indexnow', {method:'POST',redirect:'manual',signal:AbortSignal.timeout(15000),headers:{'Content-Type':'application/json; charset=utf-8'},body:JSON.stringify({host:'tvut.3678dairy.com',key:INDEXNOW_KEY,urlList:[SITE + path]})});
+  const endpoint={naver:'https://searchadvisor.naver.com/indexnow',bing:'https://www.bing.com/indexnow'}[engine];
+  if(!endpoint) throw Error('검색엔진을 확인해 주세요.');
+  const response = await request(endpoint, {method:'POST',redirect:'manual',signal:AbortSignal.timeout(15000),headers:{'Content-Type':'application/json; charset=utf-8'},body:JSON.stringify({host:'tvut.3678dairy.com',key:INDEXNOW_KEY,urlList:[SITE + path]})});
   return response.status;
 }
