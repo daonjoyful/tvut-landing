@@ -5,7 +5,7 @@ function escape(value) {
   return String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 }
 function documentPage(title, body) {
-  return '<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex,nofollow"><link rel="stylesheet" href="/assets/tvut-admin.css?v=unified3">'+(title==='생성 이력'?'<link rel="stylesheet" href="/assets/history-styles.css?v=1">':'')+'<title>' + title + ' · 티벗 관리자</title></head><body>' + body + '</body></html>';
+  return '<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex,nofollow"><link rel="stylesheet" href="/assets/tvut-admin.css?v=unified4">'+(title==='생성 이력'?'<link rel="stylesheet" href="/assets/history-styles.css?v=1">':'')+'<title>' + title + ' · 티벗 관리자</title></head><body>' + body + '</body></html>';
 }
 export function loginPage(failed, changed = false) {
   return documentPage('로그인', `<main class="login"><section class="login-card"><div class="brand"><i aria-hidden="true">티</i>티벗 운영</div>
