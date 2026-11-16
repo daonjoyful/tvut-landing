@@ -5,7 +5,7 @@ import relatedArticles from './related-articles.json';
 import {linkCatalog,appendRelated} from '../../scripts/admin-links.mjs';
 import {linksPage} from '../../scripts/admin-view.mjs';
 import {generationHistoryPage} from '../../scripts/admin-view.mjs';
-import {recordGeneration,generationHistory,generationDetail} from '../../scripts/admin-generation-history.mjs';
+import {recordGeneration,generationHistory,generationDetail,linkGeneration} from '../../scripts/admin-generation-history.mjs';
 import {loginPage, dashboardPage, postsPage, analyticsPage, passwordPage, seoPage, indexNowPage, indexingPage, articleEditor, staticEditor, inflowsPage, writingGuidePage, aiUsagePage} from '../../scripts/admin-view.mjs';
 import {recordAiUsage,readAiUsage,readExchangeRate} from '../../scripts/admin-ai-usage.mjs';
 import {saveIndexHistory,readIndexHistory,koreaDate} from '../../scripts/admin-index-history.mjs';
@@ -161,7 +161,7 @@ export async function onRequest({request,env}) {
   if (request.method === 'POST') {
     if (request.headers.get('Origin') !== origin) return respond('요청 출처를 확인해 주세요.', 403);
     if (route === '/admin/logout') return redirect('/admin/', sessionCookie('', 0));
-    if (!['/admin/login','/admin/password','/admin/naver-report','/admin/indexnow','/admin/indexing','/admin/indexing-log','/admin/article-save','/admin/article-publish','/admin/article-restore','/admin/article-image-upload','/admin/article-generate','/admin/static-save','/admin/static-publish','/admin/static-restore','/admin/writing-guide'].includes(route)) return respond('페이지를 찾을 수 없습니다.', 404);
+    if (!['/admin/login','/admin/password','/admin/naver-report','/admin/indexnow','/admin/indexing','/admin/indexing-log','/admin/article-save','/admin/article-publish','/admin/article-restore','/admin/article-image-upload','/admin/article-generate','/admin/history-link','/admin/static-save','/admin/static-publish','/admin/static-restore','/admin/writing-guide'].includes(route)) return respond('페이지를 찾을 수 없습니다.', 404);
     if (!request.headers.get('Content-Type')?.startsWith('application/x-www-form-urlencoded')) return respond('입력 형식을 확인해 주세요.', 415);
     const limit = route === '/admin/article-image-upload' ? 1000000 : route === '/admin/article-generate' ? 150000 : ['/admin/article-save','/admin/static-save'].includes(route) ? 600000 : route === '/admin/writing-guide' ? 300000 : route === '/admin/naver-report' ? 65536 : 1024;
     if (Number(request.headers.get('Content-Length')) > limit) return respond('입력이 너무 깁니다.', 413);
@@ -173,8 +173,8 @@ export async function onRequest({request,env}) {
     if(route==='/admin/article-generate') {
       if(!await signedIn(request,record))return jsonRespond({error:'로그인이 만료됐습니다.'},401);
       if(!env.OPENAI_API_KEY)return jsonRespond({error:'AI API 연결이 설정되지 않았습니다. 관리자에게 Cloudflare의 OPENAI_API_KEY 비밀값 설정을 요청하세요.'},503);
-      const title=(form.get('title')||'').trim(), source=(form.get('source')||'').trim();
-      if(!title||title.length>150||source.length<30||source.length>15000)return jsonRespond({error:'제목과 확인한 자료를 입력해 주세요. 자료는 30~15,000자여야 합니다.'},400);
+      const title=(form.get('title')||'').trim(), source=(form.get('source')||'').trim(), keyword=(form.get('keyword')||'').trim();
+      if(!title||title.length>150||keyword.length>150||source.length<30||source.length>15000)return jsonRespond({error:'제목과 확인한 자료를 입력해 주세요. 자료는 30~15,000자여야 합니다.'},400);
       try {
         const guide=await getWritingGuide(env.TVUT_ADMIN_DB), prompts=await getPrompts(env.TVUT_ADMIN_DB);
         const instruction='당신은 티벗 정보성 글 작성자입니다. 아래 관리 지침을 반영하되 제공된 자료로 확인되지 않은 사실은 만들지 마세요. 외부 검색을 했다고 주장하지 마세요. 반드시 JSON 객체 {"description":"검색 설명 300자 이내", "body":"본문"}만 출력합니다. 본문은 H1 제목 없이 도입부터 시작하고 ##, ### 소제목과 FAQ를 포함합니다. 제목 추천, 해시태그, 설명문은 본문에 넣지 마세요. 독자가 자료의 정확성을 확인하도록 사실 검증이 필요한 내용은 단정하지 마세요.\n\n기존 지침:\n'+guide.guide+'\n\n원고 작성 프롬프트:\n'+prompts.content.guide;
@@ -184,9 +184,14 @@ export async function onRequest({request,env}) {
         if(typeof generated.body!=='string'||!generated.body.trim()||generated.body.length>50000||typeof generated.description!=='string'||generated.description.length>300)throw Error('invalid output');
         const body=generated.body.replace(/^\s*#\s+[^\n]*\n+/,'').trim();
         if(!body)throw Error('empty output');
-        try {await recordGeneration(env.TVUT_ADMIN_DB,title,generated.description,body);} catch {usageWarning+=' 생성 이력을 저장하지 못했습니다. 원고를 임시저장해 주세요.';}
-        return jsonRespond({body,description:generated.description,usageWarning});
+        let generationId='';try {generationId=await recordGeneration(env.TVUT_ADMIN_DB,title,generated.description,body,keyword);} catch {usageWarning+=' 생성 이력을 저장하지 못했습니다. 원고를 임시저장해 주세요.';}
+        return jsonRespond({body,description:generated.description,usageWarning,generationId});
       } catch {return jsonRespond({error:'AI 원고를 생성하지 못했습니다. 잠시 후 다시 시도해 주세요.'},502);}
+    }
+    if(route==='/admin/history-link') {
+      if(!await signedIn(request,record))return redirect('/admin/');
+      const id=form.get('generation_id')||'',slug=form.get('slug')||'';
+      try {if(!await articleGet(env.TVUT_ADMIN_DB,slug))return respond('선택한 글을 찾을 수 없습니다.',400);await linkGeneration(env.TVUT_ADMIN_DB,id,slug);return redirect('/admin/history?linked=1');}catch{return respond('글을 연결하지 못했습니다. 다시 확인해 주세요.',400);}
     }
     if (route === '/admin/article-image-upload') {
       if (!await signedIn(request,record)) return jsonRespond({error:'로그인이 만료됐습니다.'},401);
@@ -226,6 +231,7 @@ export async function onRequest({request,env}) {
           form.set('body',appendRelated(body,form.get('title')||'',form.get('slug')||'',await allLinks(env)));
         }
         const slug = route === '/admin/article-save' ? await articleSave(env.TVUT_ADMIN_DB,form) : form.get('slug');
+        if(route==='/admin/article-save'&&form.get('generation_id')){try{await linkGeneration(env.TVUT_ADMIN_DB,form.get('generation_id'),slug);}catch{return redirect('/admin/article?slug='+encodeURIComponent(slug)+'&link_error=1');}}
         if (route === '/admin/article-publish') await articlePublish(env.TVUT_ADMIN_DB,slug,form.get('version'));
         if (route === '/admin/article-restore') await articleRestore(env.TVUT_ADMIN_DB,slug,form.get('version'));
         return redirect('/admin/article?slug='+encodeURIComponent(slug));
@@ -344,7 +350,7 @@ export async function onRequest({request,env}) {
     const article = await articleGet(env.TVUT_ADMIN_DB,slug);
     if (!article) return respond('글을 찾을 수 없습니다.',404);
     if (route === '/admin/article-preview') return respond(renderArticle(JSON.parse(article.draft),true));
-    return respond(articleEditor(article,'',await articleHasRevision(env.TVUT_ADMIN_DB,slug)));
+    return respond(articleEditor(article,url.searchParams.has('link_error')?'원고는 저장됐지만 생성 이력과 연결하지 못했습니다. 생성 이력에서 직접 연결해 주세요.':'',await articleHasRevision(env.TVUT_ADMIN_DB,slug)));
   }
   if (route === '/admin/indexnow') return respond(indexNowPage(await searchableEntries(env)));
   if (route === '/admin/seo') {
