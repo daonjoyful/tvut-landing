@@ -148,15 +148,40 @@ export async function onRequest({request,env}) {
   if (request.method === 'POST') {
     if (request.headers.get('Origin') !== origin) return respond('요청 출처를 확인해 주세요.', 403);
     if (route === '/admin/logout') return redirect('/admin/', sessionCookie('', 0));
-    if (!['/admin/login','/admin/password','/admin/naver-report','/admin/indexnow','/admin/article-save','/admin/article-publish','/admin/article-restore','/admin/static-save','/admin/static-publish','/admin/static-restore','/admin/writing-guide'].includes(route)) return respond('페이지를 찾을 수 없습니다.', 404);
+    if (!['/admin/login','/admin/password','/admin/naver-report','/admin/indexnow','/admin/article-save','/admin/article-publish','/admin/article-restore','/admin/article-image-upload','/admin/article-generate','/admin/static-save','/admin/static-publish','/admin/static-restore','/admin/writing-guide'].includes(route)) return respond('페이지를 찾을 수 없습니다.', 404);
     if (!request.headers.get('Content-Type')?.startsWith('application/x-www-form-urlencoded')) return respond('입력 형식을 확인해 주세요.', 415);
-    const limit = ['/admin/article-save','/admin/static-save'].includes(route) ? 600000 : route === '/admin/writing-guide' ? 300000 : route === '/admin/naver-report' ? 65536 : 1024;
+    const limit = route === '/admin/article-image-upload' ? 1000000 : route === '/admin/article-generate' ? 150000 : ['/admin/article-save','/admin/static-save'].includes(route) ? 600000 : route === '/admin/writing-guide' ? 300000 : route === '/admin/naver-report' ? 65536 : 1024;
     if (Number(request.headers.get('Content-Length')) > limit) return respond('입력이 너무 깁니다.', 413);
     const form = await loginForm(request,limit);
     if (!form) return respond('입력이 너무 깁니다.', 413);
     let record;
     try { record = await currentCredential(env); }
     catch { return respond('관리자 인증 저장소에 연결할 수 없습니다.',503); }
+    if(route==='/admin/article-generate') {
+      if(!await signedIn(request,record))return jsonRespond({error:'로그인이 만료됐습니다.'},401);
+      if(!env.OPENAI_API_KEY)return jsonRespond({error:'AI API 연결이 설정되지 않았습니다. 관리자에게 Cloudflare의 OPENAI_API_KEY 비밀값 설정을 요청하세요.'},503);
+      const title=(form.get('title')||'').trim(), source=(form.get('source')||'').trim();
+      if(!title||title.length>150||source.length<30||source.length>15000)return jsonRespond({error:'제목과 확인한 자료를 입력해 주세요. 자료는 30~15,000자여야 합니다.'},400);
+      try {
+        const guide=await getWritingGuide(env.TVUT_ADMIN_DB), prompts=await getPrompts(env.TVUT_ADMIN_DB);
+        const instruction='당신은 티벗 정보성 글 작성자입니다. 아래 관리 지침을 반영하되 제공된 자료로 확인되지 않은 사실은 만들지 마세요. 외부 검색을 했다고 주장하지 마세요. 반드시 JSON 객체 {"description":"검색 설명 300자 이내", "body":"본문"}만 출력합니다. 본문은 H1 제목 없이 도입부터 시작하고 ##, ### 소제목과 FAQ를 포함합니다. 제목 추천, 해시태그, 설명문은 본문에 넣지 마세요. 독자가 자료의 정확성을 확인하도록 사실 검증이 필요한 내용은 단정하지 마세요.\n\n기존 지침:\n'+guide.guide+'\n\n원고 작성 프롬프트:\n'+prompts.content.guide;
+        const response=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+env.OPENAI_API_KEY},body:JSON.stringify({model:'gpt-4.1-mini',instructions:instruction,input:'제목: '+title+'\n\n확인 자료:\n'+source,max_output_tokens:4000,text:{format:{type:'json_object'}}}),signal:AbortSignal.timeout(60000)});
+        if(!response.ok)return jsonRespond({error:'AI 응답을 받지 못했습니다. API 연결 상태와 사용 한도를 확인해 주세요.'},502);
+        const data=await response.json(); const text=data.output?.flatMap(item=>item.content||[]).find(item=>item.type==='output_text')?.text||''; const generated=JSON.parse(text);
+        if(typeof generated.body!=='string'||!generated.body.trim()||generated.body.length>50000||typeof generated.description!=='string'||generated.description.length>300)throw Error('invalid output');
+        return jsonRespond({body:generated.body,description:generated.description});
+      } catch {return jsonRespond({error:'AI 원고를 생성하지 못했습니다. 잠시 후 다시 시도해 주세요.'},502);}
+    }
+    if (route === '/admin/article-image-upload') {
+      if (!await signedIn(request,record)) return jsonRespond({error:'로그인이 만료됐습니다.'},401);
+      const encoded=form.get('image')||'';
+      if (!/^[A-Za-z0-9+/]+={0,2}$/.test(encoded) || encoded.length>700000) return jsonRespond({error:'이미지는 500KB 이하의 JPG, PNG, WebP만 가능합니다.'},400);
+      let bytes; try { bytes=Uint8Array.from(atob(encoded),c=>c.charCodeAt(0)); } catch { return jsonRespond({error:'이미지 형식 오류'},400); }
+      if(bytes.length>512000) return jsonRespond({error:'이미지는 500KB 이하여야 합니다.'},400);
+      const type=bytes[0]===255&&bytes[1]===216&&bytes[2]===255?'image/jpeg':bytes[0]===137&&bytes[1]===80&&bytes[2]===78&&bytes[3]===71&&bytes[4]===13&&bytes[5]===10&&bytes[6]===26&&bytes[7]===10?'image/png':bytes[0]===82&&bytes[1]===73&&bytes[2]===70&&bytes[3]===70&&bytes[8]===87&&bytes[9]===69&&bytes[10]===66&&bytes[11]===80?'image/webp':'';
+      if(!type) return jsonRespond({error:'JPG, PNG, WebP 이미지만 가능합니다.'},400);
+      try { const id=crypto.randomUUID(); await env.TVUT_ADMIN_DB.prepare('CREATE TABLE IF NOT EXISTS article_images (id TEXT PRIMARY KEY, type TEXT NOT NULL, bytes BLOB NOT NULL, created TEXT NOT NULL)').run(); await env.TVUT_ADMIN_DB.prepare('INSERT INTO article_images(id,type,bytes,created) VALUES(?,?,?,?)').bind(id,type,Array.from(bytes),new Date().toISOString()).run(); return jsonRespond({path:'/media/article/'+id}); } catch { return jsonRespond({error:'이미지를 저장하지 못했습니다.'},503); }
+    }
     if (route === '/admin/writing-guide') {
       if (!await signedIn(request,record)) return redirect('/admin/');
       const guide = (form.get('guide') || '').trim();
@@ -220,7 +245,7 @@ export async function onRequest({request,env}) {
     return redirect('/admin/', sessionCookie(token, lifetime));
   }
   if (request.method !== 'GET' && request.method !== 'HEAD') return respond(null, 405, {Allow:'GET, HEAD, POST'});
-  if (!['/admin', '/admin/login', '/admin/posts', '/admin/analytics', '/admin/password','/admin/seo','/admin/indexnow','/admin/article','/admin/article-preview','/admin/static-edit','/admin/static-preview','/admin/realtime-data','/admin/realtime-sources-data','/admin/inflows','/admin/inflows-data','/admin/writing-guide','/admin/writing-guide-download'].includes(route)) return respond('페이지를 찾을 수 없습니다.', 404);
+  if (!['/admin', '/admin/login', '/admin/posts', '/admin/analytics', '/admin/password','/admin/seo','/admin/indexnow','/admin/article','/admin/article-preview','/admin/article-image','/admin/static-edit','/admin/static-preview','/admin/realtime-data','/admin/realtime-sources-data','/admin/inflows','/admin/inflows-data','/admin/writing-guide','/admin/writing-guide-download'].includes(route)) return respond('페이지를 찾을 수 없습니다.', 404);
   let record;
   try { record = await currentCredential(env); }
   catch { return ['/admin/realtime-data','/admin/realtime-sources-data','/admin/inflows-data'].includes(route) ? jsonRespond({error:'관리자 인증 저장소에 연결할 수 없습니다.'},503) : respond('관리자 인증 저장소에 연결할 수 없습니다.',503); }
@@ -245,7 +270,12 @@ export async function onRequest({request,env}) {
     try { return jsonRespond(await readEvents(env.TVUT_ADMIN_DB,{source,path})); }
     catch { return jsonRespond({error:'유입 기록을 불러오지 못했습니다.'},503); }
   }
-  if (!authenticated && ['/admin/posts','/admin/analytics','/admin/password','/admin/seo','/admin/indexnow','/admin/article','/admin/article-preview','/admin/static-edit','/admin/static-preview','/admin/inflows','/admin/writing-guide','/admin/writing-guide-download'].includes(route)) return redirect('/admin/');
+  if (!authenticated && ['/admin/posts','/admin/analytics','/admin/password','/admin/seo','/admin/indexnow','/admin/article','/admin/article-preview','/admin/article-image','/admin/static-edit','/admin/static-preview','/admin/inflows','/admin/writing-guide','/admin/writing-guide-download'].includes(route)) return redirect('/admin/');
+  if(route==='/admin/article-image') {
+    const id=url.searchParams.get('id')||'';
+    if(!/^[0-9a-f-]{36}$/.test(id)) return respond('이미지를 찾을 수 없습니다.',404);
+    try {const row=await env.TVUT_ADMIN_DB.prepare('SELECT type,bytes FROM article_images WHERE id=?').bind(id).first(); if(!row)return respond('이미지를 찾을 수 없습니다.',404); return new Response(new Uint8Array(row.bytes),{headers:{'Content-Type':row.type,'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'}});} catch {return respond('이미지를 불러오지 못했습니다.',503);}
+  }
   if (request.method === 'HEAD') return respond(null);
   if (!authenticated) return respond(loginPage(false,url.searchParams.get('password') === 'changed'));
   if (route === '/admin/writing-guide' || route === '/admin/writing-guide-download') {
