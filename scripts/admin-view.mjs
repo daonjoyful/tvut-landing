@@ -17,7 +17,7 @@ export function loginPage(failed, changed = false) {
 function workspace(title, content) {
   return documentPage(title, `<div class="workspace"><aside><div class="brand"><i aria-hidden="true">티</i>티벗 관리자</div><nav aria-label="관리 메뉴">
     <a href="/admin/" ${title === '대시보드' ? 'aria-current="page"' : ''}>대시보드</a><a href="/admin/posts" ${title === '게시글' ? 'aria-current="page"' : ''}>게시글</a>
-    <a href="/admin/writing-guide" ${title === '작성 지침' ? 'aria-current="page"' : ''}>작성 지침</a><a href="/admin/analytics" ${title === '방문 통계' ? 'aria-current="page"' : ''}>방문 통계</a><a href="/admin/inflows" ${title === '개별 유입 기록' ? 'aria-current="page"' : ''}>개별 유입 기록</a><a href="/admin/seo" ${title === 'SEO 진단' ? 'aria-current="page"' : ''}>SEO 진단</a><a href="/admin/indexnow" ${title === 'IndexNow' ? 'aria-current="page"' : ''}>IndexNow</a><a href="/admin/password" ${title === '비밀번호 변경' ? 'aria-current="page"' : ''}>비밀번호 변경</a></nav></aside><div><header><span>티벗 사이트 관리</span><div>
+    <a href="/admin/writing-guide" ${title === '작성 지침' ? 'aria-current="page"' : ''}>작성 지침</a><a href="/admin/ai-usage" ${title === 'AI 사용량' ? 'aria-current="page"' : ''}>AI 사용량</a><a href="/admin/analytics" ${title === '방문 통계' ? 'aria-current="page"' : ''}>방문 통계</a><a href="/admin/inflows" ${title === '개별 유입 기록' ? 'aria-current="page"' : ''}>개별 유입 기록</a><a href="/admin/seo" ${title === 'SEO 진단' ? 'aria-current="page"' : ''}>SEO 진단</a><a href="/admin/indexnow" ${title === 'IndexNow' ? 'aria-current="page"' : ''}>IndexNow</a><a href="/admin/password" ${title === '비밀번호 변경' ? 'aria-current="page"' : ''}>비밀번호 변경</a></nav></aside><div><header><span>티벗 사이트 관리</span><div>
     <a href="/" target="_blank" rel="noopener">사이트 보기 ↗</a><form method="post" action="/admin/logout"><button>로그아웃</button></form></div></header>
     <main class="content"><h1>${title}</h1>${content}</main></div></div>`);
 }
@@ -28,6 +28,14 @@ export function passwordPage(error = '') {
   <label for="confirm">새 비밀번호 확인</label><input id="confirm" name="confirm" type="password" autocomplete="new-password" minlength="12" maxlength="128" required>
   <p>새 비밀번호는 12자 이상 입력해 주세요. 변경 후 다시 로그인합니다.</p>
   ${error ? `<p class="password-error" role="alert">${escape(error)}</p>` : ''}<button class="primary">비밀번호 변경</button></form></section>`);
+}
+export function aiUsagePage(data) {
+  const num=n=>Number(n||0).toLocaleString('ko-KR');
+  const money=n=>'$'+Number(n||0).toFixed(5);
+  const card=(label,x)=>`<article><span>${label} · 예상 비용</span><b>${x.calls ? money(x.cost) : '—'}</b><small>${num(x.calls)}회 · 입력 ${num(x.input)} / 출력 ${num(x.output)} 토큰${x.unknown?' · 일부 비용 미계산':''}</small></article>`;
+  const date=x=>x?new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',dateStyle:'medium',timeStyle:'short'}).format(new Date(x)):'기록 없음';
+  const rows=data.days.map(d=>`<tr><td>${escape(d.day)}</td><td>${num(d.calls)}</td><td>${num(d.input)}</td><td>${num(d.cached)}</td><td>${num(d.output)}</td><td>${money(d.cost)}${d.unknown?' + 미계산':''}</td></tr>`).join('');
+  return workspace('AI 사용량',`<section class="panel"><div class="heading"><h2>티벗 원고 생성 사용량</h2><a href="/admin/ai-usage">새로고침 ↻</a></div><p>이 관리자에서 AI 원고를 생성한 요청만 집계합니다. 기록 기능 적용 이전, 다른 사이트·도구의 사용량과 ChatGPT 대화는 포함되지 않습니다. 최종 청구액이 아닌 예상치이며, 기록 실패나 요금 변경 등으로 실제 비용과 다를 수 있습니다.</p><p>한국 시간 기준 · 첫 기록: ${escape(date(data.all.first))} · 마지막 기록: ${escape(date(data.all.last))} · 이 화면은 열려 있는 동안 30초마다 갱신됩니다.</p></section><div class="cards" style="margin-top:16px">${card('오늘',data.today)}${card('이번 달',data.month)}${card('기록 이후 누적',data.all)}</div><section class="panel"><h2>날짜별 사용 내역</h2><p>최근 30개 기록 날짜 · 입력에는 캐시 입력이 포함됩니다.</p><div class="table-wrap"><table><thead><tr><th>날짜</th><th>호출</th><th>입력 토큰</th><th>캐시 입력</th><th>출력 토큰</th><th>예상 비용</th></tr></thead><tbody>${rows||'<tr><td colspan="6">아직 기록된 요청이 없습니다.</td></tr>'}</tbody></table></div><p>예상 비용은 GPT-4.1 mini 표준 요금(입력 100만 토큰당 $0.40, 캐시 입력 $0.10, 출력 $1.60)을 적용합니다. <a href="https://developers.openai.com/api/docs/models/gpt-4.1-mini" target="_blank" rel="noopener">요금 기준 보기 ↗</a></p><p><a href="https://platform.openai.com/usage" target="_blank" rel="noopener">OpenAI 전체 사용량 확인 ↗</a></p></section><script src="/assets/tvut-ai-usage.js" defer></script>`);
 }
 function rows(entries) {
   return '<ul class="entries">' + entries.map(entry => `<li><a href="${escape(entry.url)}" target="_blank" rel="noopener"><span><small>${escape(entry.program)} · ${entry.date ? escape(entry.date) : '프로그램 안내'}</small><strong>${escape(entry.title)}</strong></span><span aria-hidden="true">↗</span></a></li>`).join('') + '</ul>';

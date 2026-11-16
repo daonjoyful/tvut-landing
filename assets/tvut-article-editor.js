@@ -29,7 +29,7 @@ generateButton?.addEventListener('click',async()=>{
     const result=await response.json();if(!response.ok)throw Error(result.error||'원고를 생성하지 못했습니다.');
     if(body.value.trim()||description.value.trim()){generateStatus.textContent='생성 중 편집 내용이 변경되어 덮어쓰지 않았습니다.';return;}
     body.value=result.body;description.value=result.description;
-    generateStatus.textContent='초안이 입력되었습니다. 내용과 출처를 직접 검수한 뒤 임시저장하세요.';
+    generateStatus.textContent='초안이 입력되었습니다. 내용과 출처를 직접 검수한 뒤 임시저장하세요.'+(result.usageWarning?' '+result.usageWarning:'');
   }catch(error){generateStatus.textContent=error.message||'원고를 생성하지 못했습니다.';}
   finally{generateButton.disabled=false;}
 });
