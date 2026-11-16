@@ -1,7 +1,7 @@
 import credential from './credential.json';
 import entries from './catalog.json';
 import {loginPage, dashboardPage, postsPage, analyticsPage, passwordPage, seoPage, indexNowPage, articleEditor, staticEditor, inflowsPage, writingGuidePage, aiUsagePage} from '../../scripts/admin-view.mjs';
-import {recordAiUsage,readAiUsage} from '../../scripts/admin-ai-usage.mjs';
+import {recordAiUsage,readAiUsage,readExchangeRate} from '../../scripts/admin-ai-usage.mjs';
 import {defaultGuide} from '../../scripts/admin-writing-guide.mjs';
 import {contentPrompt, keywordPrompt, thumbnailPrompt} from '../../scripts/admin-prompts.mjs';
 import {fetchAnalytics} from '../../scripts/admin-analytics.mjs';
@@ -168,7 +168,7 @@ export async function onRequest({request,env}) {
         const instruction='당신은 티벗 정보성 글 작성자입니다. 아래 관리 지침을 반영하되 제공된 자료로 확인되지 않은 사실은 만들지 마세요. 외부 검색을 했다고 주장하지 마세요. 반드시 JSON 객체 {"description":"검색 설명 300자 이내", "body":"본문"}만 출력합니다. 본문은 H1 제목 없이 도입부터 시작하고 ##, ### 소제목과 FAQ를 포함합니다. 제목 추천, 해시태그, 설명문은 본문에 넣지 마세요. 독자가 자료의 정확성을 확인하도록 사실 검증이 필요한 내용은 단정하지 마세요.\n\n기존 지침:\n'+guide.guide+'\n\n원고 작성 프롬프트:\n'+prompts.content.guide;
         const response=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+env.OPENAI_API_KEY},body:JSON.stringify({model:'gpt-4.1-mini',instructions:instruction,input:'JSON 형식으로 작성하세요.\n제목: '+title+'\n\n확인 자료:\n'+source,max_output_tokens:4000,text:{format:{type:'json_object'}}}),signal:AbortSignal.timeout(60000)});
         if(!response.ok){const error=await response.json().catch(()=>({})); const code=error?.error?.code||''; const detail=String(error?.error?.message||'').replace(/sk-[a-zA-Z0-9_-]+/g,'[비공개]').slice(0,400); const message=response.status===401?'OpenAI API 키 인증에 실패했습니다. 키가 올바른지 확인해 주세요.':response.status===429&&code==='insufficient_quota'?'OpenAI API 사용 한도 또는 결제 잔액이 부족합니다. API 계정의 결제 설정을 확인해 주세요.':response.status===429?'OpenAI API 요청 한도에 도달했습니다. 잠시 후 다시 시도해 주세요.':response.status===403?'OpenAI API 프로젝트의 모델 사용 권한을 확인해 주세요.':'AI 응답을 받지 못했습니다. (HTTP '+response.status+') '+detail;return jsonRespond({error:message},502);}
-        const data=await response.json(); let usageWarning=''; try {await recordAiUsage(env.TVUT_ADMIN_DB,data.usage,'gpt-4.1-mini');}catch {usageWarning='이번 요청의 사용량을 기록하지 못했습니다. OpenAI 사용량 페이지를 확인해 주세요.';} const text=data.output?.flatMap(item=>item.content||[]).find(item=>item.type==='output_text')?.text||''; const generated=JSON.parse(text);
+        const data=await response.json(); let usageWarning=''; try {await recordAiUsage(env.TVUT_ADMIN_DB,data.usage,'gpt-4.1-mini',title);}catch {usageWarning='이번 요청의 사용량을 기록하지 못했습니다. OpenAI 사용량 페이지를 확인해 주세요.';} const text=data.output?.flatMap(item=>item.content||[]).find(item=>item.type==='output_text')?.text||''; const generated=JSON.parse(text);
         if(typeof generated.body!=='string'||!generated.body.trim()||generated.body.length>50000||typeof generated.description!=='string'||generated.description.length>300)throw Error('invalid output');
         const body=generated.body.replace(/^\s*#\s+[^\n]*\n+/,'').trim();
         if(!body)throw Error('empty output');
@@ -281,7 +281,7 @@ export async function onRequest({request,env}) {
   }
   if (request.method === 'HEAD') return respond(null);
   if (!authenticated) return respond(loginPage(false,url.searchParams.get('password') === 'changed'));
-  if(route==='/admin/ai-usage') {try {return respond(aiUsagePage(await readAiUsage(env.TVUT_ADMIN_DB)));} catch {return respond('AI 사용량을 불러오지 못했습니다.',503);}}
+  if(route==='/admin/ai-usage') {try {const [usage,exchange]=await Promise.all([readAiUsage(env.TVUT_ADMIN_DB),readExchangeRate(env.TVUT_ADMIN_DB).catch(()=>null)]);return respond(aiUsagePage(usage,exchange));} catch {return respond('AI 사용량을 불러오지 못했습니다.',503);}}
   if (route === '/admin/writing-guide' || route === '/admin/writing-guide-download') {
     try { const saved=await getWritingGuide(env.TVUT_ADMIN_DB); const prompts=await getPrompts(env.TVUT_ADMIN_DB); if (route.endsWith('-download')) { const kind=url.searchParams.get('kind'); const value=kind==='content'?prompts.content.guide:kind==='keyword'?prompts.keyword.guide:kind==='thumbnail'?prompts.thumbnail.guide:saved.guide; return new Response(value,{headers:{'Content-Type':'text/plain; charset=utf-8','Content-Disposition':'attachment; filename="tvut-writing-guide.txt"','Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'}}); } return respond(writingGuidePage(saved.guide,saved.updated,url.searchParams.has('saved')?'저장했습니다.':'',prompts)); }
     catch { return respond('작성 지침을 불러오지 못했습니다.',503); }

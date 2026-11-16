@@ -20,6 +20,7 @@ nav{display:grid;gap:6px}nav a{padding:10px 12px;border-radius:7px;font-size:14p
 header{background:white;border-bottom:1px solid #e2e9e7;display:flex;align-items:center;justify-content:space-between;padding:12px 24px;font-size:13px;gap:8px}header>div,.heading,.search>div{display:flex;align-items:center;gap:8px}
 .content{max-width:1250px;padding:32px clamp(16px,3vw,44px)}.content h1{margin-bottom:22px}
 .cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:18px}.cards article,.panel{padding:20px}
+.ai-usage-cards,.ai-usage-section{margin-top:16px}.ai-usage-chart{display:block;width:100%;height:auto;margin-top:16px}.ai-usage-chart text{font-size:12px;fill:#536a6d}.ai-usage-cards b{font-size:clamp(19px,2.5vw,30px);overflow-wrap:anywhere}
 .cards span,small{color:#536a6d;font-size:13px}.cards b{display:block;font-size:30px}
 .panels{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.heading{justify-content:space-between}
 h2{font-size:17px}.heading a{font-size:13px;color:#186c57}.entries{padding:0;list-style:none;margin-top:10px}
