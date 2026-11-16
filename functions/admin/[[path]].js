@@ -98,7 +98,7 @@ function sessionCookie(value, age) {
 }
 async function searchableEntries(env) {
   const articles = await articleList(env.TVUT_ADMIN_DB);
-  return [...entries,...articles.filter(row=>row.published).map(row=>({url:'/review/notice/'+row.slug+'/',title:JSON.parse(row.published).title,program:'관리자 작성',date:''}))];
+  return [...entries,...articles.filter(row=>row.published).map(row=>({url:'/review/notice/'+row.slug+'/',title:JSON.parse(row.published).title,program:'관리자 작성',date:'',publishedAt:row.published_at||''}))];
 }
 async function allLinks(env){
   const links=linkCatalog(staticLinks,entries,await articleList(env.TVUT_ADMIN_DB),relatedArticles);
