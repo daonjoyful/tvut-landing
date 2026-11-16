@@ -2,6 +2,7 @@ import credential from './credential.json';
 import entries from './catalog.json';
 import {loginPage, dashboardPage, postsPage, analyticsPage, passwordPage, seoPage, indexNowPage, indexingPage, articleEditor, staticEditor, inflowsPage, writingGuidePage, aiUsagePage} from '../../scripts/admin-view.mjs';
 import {recordAiUsage,readAiUsage,readExchangeRate} from '../../scripts/admin-ai-usage.mjs';
+import {saveIndexHistory,readIndexHistory,koreaDate} from '../../scripts/admin-index-history.mjs';
 import {defaultGuide} from '../../scripts/admin-writing-guide.mjs';
 import {contentPrompt, keywordPrompt, thumbnailPrompt} from '../../scripts/admin-prompts.mjs';
 import {fetchAnalytics} from '../../scripts/admin-analytics.mjs';
@@ -149,7 +150,7 @@ export async function onRequest({request,env}) {
   if (request.method === 'POST') {
     if (request.headers.get('Origin') !== origin) return respond('요청 출처를 확인해 주세요.', 403);
     if (route === '/admin/logout') return redirect('/admin/', sessionCookie('', 0));
-    if (!['/admin/login','/admin/password','/admin/naver-report','/admin/indexnow','/admin/indexing','/admin/article-save','/admin/article-publish','/admin/article-restore','/admin/article-image-upload','/admin/article-generate','/admin/static-save','/admin/static-publish','/admin/static-restore','/admin/writing-guide'].includes(route)) return respond('페이지를 찾을 수 없습니다.', 404);
+    if (!['/admin/login','/admin/password','/admin/naver-report','/admin/indexnow','/admin/indexing','/admin/indexing-log','/admin/article-save','/admin/article-publish','/admin/article-restore','/admin/article-image-upload','/admin/article-generate','/admin/static-save','/admin/static-publish','/admin/static-restore','/admin/writing-guide'].includes(route)) return respond('페이지를 찾을 수 없습니다.', 404);
     if (!request.headers.get('Content-Type')?.startsWith('application/x-www-form-urlencoded')) return respond('입력 형식을 확인해 주세요.', 415);
     const limit = route === '/admin/article-image-upload' ? 1000000 : route === '/admin/article-generate' ? 150000 : ['/admin/article-save','/admin/static-save'].includes(route) ? 600000 : route === '/admin/writing-guide' ? 300000 : route === '/admin/naver-report' ? 65536 : 1024;
     if (Number(request.headers.get('Content-Length')) > limit) return respond('입력이 너무 깁니다.', 413);
@@ -236,9 +237,18 @@ export async function onRequest({request,env}) {
       const engine=form.get('engine')||'', path=form.get('path')||'';
       if(!['naver','bing'].includes(engine))return respond('검색엔진을 확인해 주세요.',400);
       const all=await searchableEntries(env);
-      if(!allowedPath(path,all))return respond(indexingPage(engine,all,'/',null,'목록에 있는 공개 페이지만 제출할 수 있습니다.'),400);
-      try {const status=await submitIndexNow(path,all,fetch,engine);return respond(indexingPage(engine,all,path,status),status===200||status===202?200:502);}
-      catch {return respond(indexingPage(engine,all,path,null,'요청에 실패했습니다. 잠시 후 다시 시도해 주세요.'),502);}
+      if(!allowedPath(path,all))return respond(indexingPage(engine,all,'/',null,'목록에 있는 공개 페이지만 제출할 수 있습니다.',await readIndexHistory(env.TVUT_ADMIN_DB,engine),koreaDate()),400);
+      try {const status=await submitIndexNow(path,all,fetch,engine);let warning='';try{await saveIndexHistory(env.TVUT_ADMIN_DB,{engine,path,workDate:koreaDate(),status:status===200||status===202?'요청함':'요청 실패',method:'IndexNow'});}catch{warning='요청 결과의 작업 내역을 저장하지 못했습니다.';}return respond(indexingPage(engine,all,path,status,warning,await readIndexHistory(env.TVUT_ADMIN_DB,engine),koreaDate()),status===200||status===202?200:502);}
+      catch {return respond(indexingPage(engine,all,path,null,'요청에 실패했습니다. 잠시 후 다시 시도해 주세요.',await readIndexHistory(env.TVUT_ADMIN_DB,engine),koreaDate()),502);}
+    }
+    if(route==='/admin/indexing-log') {
+      if(!await signedIn(request,record))return redirect('/admin/');
+      const engine=form.get('engine')||'',path=form.get('path')||'',workDate=form.get('work_date')||'',status=form.get('status')||'';
+      if(!['naver','google','bing'].includes(engine))return respond('검색엔진을 확인해 주세요.',400);
+      const all=await searchableEntries(env);
+      if(!allowedPath(path,all))return respond('공개 페이지를 선택해 주세요.',400);
+      try{await saveIndexHistory(env.TVUT_ADMIN_DB,{engine,path,workDate,status,method:'수동 기록'});return redirect('/admin/indexing?engine='+engine+'&saved=1');}
+      catch{return respond(indexingPage(engine,all,path,null,'날짜와 상태를 확인해 주세요.',await readIndexHistory(env.TVUT_ADMIN_DB,engine),koreaDate()),400);}
     }
     if (route === '/admin/naver-report') {
       if (!await signedIn(request,record)) return redirect('/admin/');
@@ -290,7 +300,7 @@ export async function onRequest({request,env}) {
   }
   if (request.method === 'HEAD') return respond(null);
   if (!authenticated) return respond(loginPage(false,url.searchParams.get('password') === 'changed'));
-  if(route==='/admin/indexing') {const engine=url.searchParams.get('engine')||'';if(!['naver','google','bing'].includes(engine))return respond('검색엔진을 확인해 주세요.',400);try{return respond(indexingPage(engine,await searchableEntries(env)));}catch{return respond('공개 페이지 목록을 불러오지 못했습니다.',503);}}
+  if(route==='/admin/indexing') {const engine=url.searchParams.get('engine')||'';if(!['naver','google','bing'].includes(engine))return respond('검색엔진을 확인해 주세요.',400);try{return respond(indexingPage(engine,await searchableEntries(env),'/',null,'',await readIndexHistory(env.TVUT_ADMIN_DB,engine),koreaDate(),url.searchParams.has('saved')));}catch{return respond('공개 페이지 목록을 불러오지 못했습니다.',503);}}
   if(route==='/admin/ai-usage') {try {const [usage,exchange]=await Promise.all([readAiUsage(env.TVUT_ADMIN_DB),readExchangeRate(env.TVUT_ADMIN_DB).catch(()=>null)]);return respond(aiUsagePage(usage,exchange));} catch {return respond('AI 사용량을 불러오지 못했습니다.',503);}}
   if (route === '/admin/writing-guide' || route === '/admin/writing-guide-download') {
     try { const saved=await getWritingGuide(env.TVUT_ADMIN_DB); const prompts=await getPrompts(env.TVUT_ADMIN_DB); if (route.endsWith('-download')) { const kind=url.searchParams.get('kind'); const value=kind==='content'?prompts.content.guide:kind==='keyword'?prompts.keyword.guide:kind==='thumbnail'?prompts.thumbnail.guide:saved.guide; return new Response(value,{headers:{'Content-Type':'text/plain; charset=utf-8','Content-Disposition':'attachment; filename="tvut-writing-guide.txt"','Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'}}); } return respond(writingGuidePage(saved.guide,saved.updated,url.searchParams.has('saved')?'저장했습니다.':'',prompts)); }
