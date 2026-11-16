@@ -23,7 +23,7 @@ function workspace(title, content) {
 }
 export function linksPage(links){
  const rows=links.map(x=>`<tr><td>${escape(x.labels.join(' · ')||'표시 문구 없음')}</td><td><a href="${escape(x.url)}" target="_blank" rel="noopener noreferrer">${escape(x.url)}</a></td><td>${escape(x.type)}</td><td>${escape(x.sources.join(', '))}</td></tr>`).join('');
- return workspace('링크 목록',`<section class="panel"><p>정적 원본에서 수집한 링크와 현재 발행 글의 링크를 합친 목록입니다. 정적 페이지의 관리자 수정본이나 스크립트로 생성된 링크는 포함되지 않을 수 있습니다. 주소 접속 여부는 자동 검사하지 않습니다.</p><p>총 ${links.length}개 주소 · 관련 글은 제목의 프로그램 주제가 일치하는 공개 내부 글만 자동 연결합니다.</p><div class="table-wrap"><table><thead><tr><th>표시 문구</th><th>연결 주소</th><th>종류</th><th>발견 위치</th></tr></thead><tbody>${rows}</tbody></table></div></section>`);
+ return workspace('링크 목록',`<section class="panel"><p>정적 원본에서 수집한 링크와 현재 발행 글의 링크를 합친 목록입니다. 정적 페이지의 관리자 수정본이나 스크립트로 생성된 링크는 포함되지 않을 수 있습니다. 주소 접속 여부는 자동 검사하지 않습니다.</p><p>총 ${links.length}개 주소 · 관련 글은 제목의 주제와 단서가 일치하는 공개 내부 글 또는 다온조이풀 글을 자동 연결합니다.</p><div class="table-wrap"><table><thead><tr><th>표시 문구</th><th>연결 주소</th><th>종류</th><th>발견 위치</th></tr></thead><tbody>${rows}</tbody></table></div></section>`);
 }
 export function passwordPage(error = '') {
   return workspace('비밀번호 변경', `<section class="panel password-settings"><form action="/admin/password" method="post">
