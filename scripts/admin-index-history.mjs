@@ -1,5 +1,5 @@
 const engines=['naver','google','bing'];
-const statuses=['요청함','색인 확인','확인 필요','요청 실패'];
+const statuses=['요청함','색인 확인','확인 필요','요청 실패','색인완료','미색인'];
 async function ensure(db){await db.prepare('CREATE TABLE IF NOT EXISTS admin_index_history (id TEXT PRIMARY KEY, engine TEXT NOT NULL, path TEXT NOT NULL, work_date TEXT NOT NULL, status TEXT NOT NULL, method TEXT NOT NULL, created TEXT NOT NULL)').run();}
 export function koreaDate(){return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());}
 export async function saveIndexHistory(db,{engine,path,workDate,status,method}){
