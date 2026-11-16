@@ -66,3 +66,5 @@ input,.workspace textarea,.workspace select{border-color:#d3dfec;border-radius:9
 @media(max-width:760px){.workspace .content{padding-left:16px;padding-right:16px}.workspace .table-wrap{max-width:100%}}
 
 .workspace a.primary,.workspace .heading a.primary{color:#fff}
+
+.workspace .entries a>span:last-child,.workspace .realtime-panel .heading button{flex:none;white-space:nowrap}
