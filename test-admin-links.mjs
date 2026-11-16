@@ -1,0 +1,13 @@
+import {strict as assert} from 'node:assert';
+import {linkCatalog,appendRelated} from './scripts/admin-links.mjs';
+const entries=[{url:'/review/notice/install/',title:'티벗 앱 설치 방법 안내'},{url:'/review/amplaza/',title:'아침마당 돌발퀴즈 참여 방법'}];
+const articles=[{slug:'tvut-login',published:JSON.stringify({title:'티벗 로그인 방법',body:'[도움말](https://daonjoyful.com/help/)'})},{slug:'draft',published:null}];
+const links=linkCatalog([],entries,articles);
+assert(links.some(x=>x.url==='https://daonjoyful.com/help/'));
+assert(!links.some(x=>x.url.includes('/draft/')));
+const result=appendRelated('첫 문단','티벗 앱 설치 방법','new',links);
+assert(result.includes('/review/notice/install/'));
+assert(!result.includes('/review/amplaza/'));
+assert(!appendRelated('글','상관없는 내용','new',links).includes('함께 읽을 글'));
+assert.equal(appendRelated('[설치](https://tvut.3678dairy.com/review/notice/install/)','티벗 앱 설치 방법','new',links).includes('함께 읽을 글'),false);
+console.log('related links: passed');

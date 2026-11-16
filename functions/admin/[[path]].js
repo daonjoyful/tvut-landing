@@ -1,5 +1,8 @@
 import credential from './credential.json';
 import entries from './catalog.json';
+import staticLinks from './link-inventory.json';
+import {linkCatalog,appendRelated} from '../../scripts/admin-links.mjs';
+import {linksPage} from '../../scripts/admin-view.mjs';
 import {loginPage, dashboardPage, postsPage, analyticsPage, passwordPage, seoPage, indexNowPage, indexingPage, articleEditor, staticEditor, inflowsPage, writingGuidePage, aiUsagePage} from '../../scripts/admin-view.mjs';
 import {recordAiUsage,readAiUsage,readExchangeRate} from '../../scripts/admin-ai-usage.mjs';
 import {saveIndexHistory,readIndexHistory,koreaDate} from '../../scripts/admin-index-history.mjs';
@@ -94,6 +97,7 @@ async function searchableEntries(env) {
   const articles = await articleList(env.TVUT_ADMIN_DB);
   return [...entries,...articles.filter(row=>row.published).map(row=>({url:'/review/notice/'+row.slug+'/',title:JSON.parse(row.published).title,program:'관리자 작성',date:''}))];
 }
+async function allLinks(env){return linkCatalog(staticLinks,entries,await articleList(env.TVUT_ADMIN_DB));}
 async function getWritingGuide(db) {
   await db.prepare('CREATE TABLE IF NOT EXISTS admin_writing_guide (id INTEGER PRIMARY KEY, guide TEXT NOT NULL, updated TEXT NOT NULL)').run();
   return (await db.prepare('SELECT guide,updated FROM admin_writing_guide WHERE id=1').first()) || {guide:defaultGuide,updated:''};
@@ -209,6 +213,10 @@ export async function onRequest({request,env}) {
     if (['/admin/article-save','/admin/article-publish','/admin/article-restore'].includes(route)) {
       if (!await signedIn(request,record)) return redirect('/admin/');
       try {
+        if(route === '/admin/article-save' && !form.get('old_slug')) {
+          const body=form.get('body')||'';
+          form.set('body',appendRelated(body,form.get('title')||'',form.get('slug')||'',await allLinks(env)));
+        }
         const slug = route === '/admin/article-save' ? await articleSave(env.TVUT_ADMIN_DB,form) : form.get('slug');
         if (route === '/admin/article-publish') await articlePublish(env.TVUT_ADMIN_DB,slug,form.get('version'));
         if (route === '/admin/article-restore') await articleRestore(env.TVUT_ADMIN_DB,slug,form.get('version'));
@@ -267,7 +275,7 @@ export async function onRequest({request,env}) {
     return redirect('/admin/', sessionCookie(token, lifetime));
   }
   if (request.method !== 'GET' && request.method !== 'HEAD') return respond(null, 405, {Allow:'GET, HEAD, POST'});
-  if (!['/admin', '/admin/login', '/admin/posts', '/admin/analytics', '/admin/password','/admin/seo','/admin/indexnow','/admin/indexing','/admin/article','/admin/article-preview','/admin/article-image','/admin/ai-usage','/admin/static-edit','/admin/static-preview','/admin/realtime-data','/admin/realtime-sources-data','/admin/inflows','/admin/inflows-data','/admin/writing-guide','/admin/writing-guide-download'].includes(route)) return respond('페이지를 찾을 수 없습니다.', 404);
+  if (!['/admin', '/admin/login', '/admin/posts', '/admin/analytics', '/admin/password','/admin/seo','/admin/indexnow','/admin/indexing','/admin/article','/admin/article-preview','/admin/article-image','/admin/ai-usage','/admin/static-edit','/admin/static-preview','/admin/realtime-data','/admin/realtime-sources-data','/admin/inflows','/admin/inflows-data','/admin/writing-guide','/admin/writing-guide-download','/admin/links'].includes(route)) return respond('페이지를 찾을 수 없습니다.', 404);
   let record;
   try { record = await currentCredential(env); }
   catch { return ['/admin/realtime-data','/admin/realtime-sources-data','/admin/inflows-data'].includes(route) ? jsonRespond({error:'관리자 인증 저장소에 연결할 수 없습니다.'},503) : respond('관리자 인증 저장소에 연결할 수 없습니다.',503); }
@@ -292,7 +300,8 @@ export async function onRequest({request,env}) {
     try { return jsonRespond(await readEvents(env.TVUT_ADMIN_DB,{source,path})); }
     catch { return jsonRespond({error:'유입 기록을 불러오지 못했습니다.'},503); }
   }
-  if (!authenticated && ['/admin/posts','/admin/analytics','/admin/password','/admin/seo','/admin/indexnow','/admin/indexing','/admin/article','/admin/article-preview','/admin/article-image','/admin/ai-usage','/admin/static-edit','/admin/static-preview','/admin/inflows','/admin/writing-guide','/admin/writing-guide-download'].includes(route)) return redirect('/admin/');
+  if (!authenticated && ['/admin/posts','/admin/analytics','/admin/password','/admin/seo','/admin/indexnow','/admin/indexing','/admin/article','/admin/article-preview','/admin/article-image','/admin/ai-usage','/admin/static-edit','/admin/static-preview','/admin/inflows','/admin/writing-guide','/admin/writing-guide-download','/admin/links'].includes(route)) return redirect('/admin/');
+  if(route==='/admin/links') {try{return respond(linksPage(await allLinks(env)));}catch{return respond('링크 목록을 불러오지 못했습니다.',503);}}
   if(route==='/admin/article-image') {
     const id=url.searchParams.get('id')||'';
     if(!/^[0-9a-f-]{36}$/.test(id)) return respond('이미지를 찾을 수 없습니다.',404);
