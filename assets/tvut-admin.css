@@ -40,3 +40,27 @@ h2{font-size:17px}.heading a{font-size:13px;color:#186c57}.entries{padding:0;lis
 .inflow-table{max-height:650px}.inflow-table table{min-width:1050px}.inflow-table td:first-child{white-space:nowrap}.inflow-table td:last-child{text-align:left}
 
 .related-links-table{max-height:none}.related-links-table table{table-layout:fixed}.related-links-table th:nth-child(1){width:32%}.related-links-table th:nth-child(2){width:51%}.related-links-table th:nth-child(3){width:17%}.related-links-table td:last-child,.related-links-table th:last-child{text-align:left;white-space:nowrap}.related-links-table a{overflow-wrap:anywhere}@media(max-width:650px){.related-links-table table{min-width:650px}}
+
+/* 생성 이력 화면의 색상과 구성 요소를 관리자 공통 스타일에 적용합니다. */
+:root{color:#152c4c;background:#f5f7fa}
+.workspace{color:#152c4c;background:#f5f7fa}
+.workspace aside{background:#172f35}
+.workspace nav a[aria-current]{background:#e9f2ff;color:#1b61bc}
+.workspace .content h1,.workspace h2,.workspace h3{color:#152c4c}
+.login-card,.workspace .panel,.workspace .cards article{border-color:#e2eaf6;border-radius:13px;box-shadow:0 2px 10px rgba(35,70,120,.035)}
+.workspace .panel p,.workspace small,.workspace .cards span,.save-hint{color:#687b91}
+.primary,.workspace .period.active{background:#1b61bc;border-color:#1b61bc;color:#fff}
+.workspace button:not(.primary),.workspace header a{border-color:#d8e5f5;color:#1b61bc}
+input,.workspace textarea,.workspace select{border-color:#d3dfec;border-radius:9px}
+:is(button,a,input,textarea,select):focus-visible{outline:3px solid #7baaf0;outline-offset:3px}
+.workspace .table-wrap th{background:#f7f9fc;color:#61738a}
+.workspace .table-wrap td{vertical-align:middle}
+.workspace .table-wrap th,.workspace .table-wrap td{border-bottom-color:#e8edf5}
+.workspace .heading a,.workspace .article-actions a,.workspace .static-entries li>a{color:#1b61bc}
+.workspace .chart{fill:#8db5e7}
+.workspace .chart rect:hover{fill:#1b61bc}
+.workspace .realtime-summary b,.workspace .seo-state.ok{color:#1b61bc}
+.workspace .period{border-color:#d8e5f5}
+.workspace .entries li+li,.workspace .source-realtime,.workspace .article-actions{border-color:#e8edf5}
+.login .brand i{background:#e9f2ff;color:#1b61bc}
+@media(max-width:760px){.workspace .content{padding-left:16px;padding-right:16px}.workspace .table-wrap{max-width:100%}}
