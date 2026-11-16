@@ -1,4 +1,5 @@
 import {trafficReport} from './admin-traffic.mjs';
+import {eligibleRelated} from './admin-links.mjs';
 const analytics = 'https://analytics.google.com/analytics/web/#/a383407073p562387220/reports/intelligenthome';
 function escape(value) {
   return String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
@@ -22,8 +23,10 @@ function workspace(title, content) {
     <main class="content"><h1>${title}</h1>${content}</main></div></div>`);
 }
 export function linksPage(links){
+ const related=links.filter(eligibleRelated);
+ const table=items=>items.map(x=>`<tr><td>${escape(x.labels[0]||'제목 없음')}</td><td><a href="${escape(x.url)}" target="_blank" rel="noopener noreferrer">${escape(x.url)}</a></td></tr>`).join('');
  const rows=links.map(x=>`<tr><td>${escape(x.labels.join(' · ')||'표시 문구 없음')}</td><td><a href="${escape(x.url)}" target="_blank" rel="noopener noreferrer">${escape(x.url)}</a></td><td>${escape(x.type)}</td><td>${escape(x.sources.join(', '))}</td></tr>`).join('');
- return workspace('링크 목록',`<section class="panel"><p>정적 원본, 현재 발행 글, 오늘 방송정보 API 링크를 합친 목록입니다. 방송정보 API가 일시적으로 응답하지 않거나 다른 스크립트가 링크를 생성할 때 목록에서 빠질 수 있습니다. 주소 접속 여부는 자동 검사하지 않습니다.</p><p>총 ${links.length}개 주소 · 관련 글은 제목의 주제와 단서가 일치하는 공개 내부 글 또는 다온조이풀 글을 자동 연결합니다.</p><div class="table-wrap"><table><thead><tr><th>표시 문구</th><th>연결 주소</th><th>종류</th><th>발견 위치</th></tr></thead><tbody>${rows}</tbody></table></div></section>`);
+ return workspace('링크 목록',`<section class="panel"><h2>신규 글 연결용 관련 글</h2><p>직접 지정한 글과 공개된 티벗 글입니다. 새 글을 처음 임시저장할 때 주제가 일치하는 글만 최대 2개 연결합니다. 자동 연결 결과는 발행 전에 검토할 수 있습니다.</p><h3>다온조이풀 관련 글 (${related.filter(x=>x.sources.includes('운영자 제공 관련 글')).length}개)</h3><div class="table-wrap"><table><thead><tr><th>제목</th><th>URL</th></tr></thead><tbody>${table(related.filter(x=>x.sources.includes('운영자 제공 관련 글')))}</tbody></table></div><h3>공개된 티벗 글 (${related.filter(x=>x.type==='내부 글').length}개)</h3><div class="table-wrap"><table><thead><tr><th>제목</th><th>URL</th></tr></thead><tbody>${table(related.filter(x=>x.type==='내부 글'))}</tbody></table></div></section><section class="panel"><details><summary>사이트에서 발견된 전체 링크 ${links.length}개 보기</summary><p>정적 원본, 현재 발행 글, 오늘 방송정보 API 링크를 합친 목록입니다. 방송정보 API가 일시적으로 응답하지 않거나 다른 스크립트가 링크를 생성할 때 목록에서 빠질 수 있습니다. 주소 접속 여부는 자동 검사하지 않습니다.</p><div class="table-wrap"><table><thead><tr><th>표시 문구</th><th>연결 주소</th><th>종류</th><th>발견 위치</th></tr></thead><tbody>${rows}</tbody></table></div></details></section>`);
 }
 export function passwordPage(error = '') {
   return workspace('비밀번호 변경', `<section class="panel password-settings"><form action="/admin/password" method="post">
