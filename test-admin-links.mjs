@@ -1,9 +1,11 @@
 import {strict as assert} from 'node:assert';
 import {linkCatalog,appendRelated,eligibleRelated} from './scripts/admin-links.mjs';
 import {linksPage} from './scripts/admin-view.mjs';
+import {renderBody} from './scripts/admin-articles.mjs';
 const entries=[{url:'/review/notice/install/',title:'티벗 앱 설치 방법 안내'},{url:'/review/amplaza/',title:'아침마당 돌발퀴즈 참여 방법'}];
 const articles=[{slug:'tvut-login',published:JSON.stringify({title:'티벗 로그인 방법',body:'[도움말](https://daonjoyful.com/help/)'})},{slug:'draft',published:null}];
 const links=linkCatalog([],entries,articles);
+links.find(x=>x.url.endsWith('/review/notice/install/')).thumbnail='https://tvut.3678dairy.com/assets/tvut-main-square-v2.jpg';
 assert.equal(linkCatalog([{url:'tel:027811000',labels:['전화'],sources:['/review/sixhour/']}],[],[])[0].url,'tel:027811000');
 assert(links.some(x=>x.url==='https://daonjoyful.com/help/'));
 assert(!links.some(x=>x.url.includes('/draft/')));
@@ -14,8 +16,10 @@ assert(!appendRelated('글','상관없는 내용','new',links).includes('함께 
 assert.equal(appendRelated('[설치](https://tvut.3678dairy.com/review/notice/install/)','티벗 앱 설치 방법','new',links).includes('함께 읽을 글'),false);
 assert(!appendRelated('글','아침마당 오늘 방송','new',links).includes('함께 읽을 글'));
 assert(!appendRelated('글','티벗 도움말','new',links).includes('daonjoyful.com/help/'));
-const approved=linkCatalog([],[],[],[{url:'https://daonjoyful.com/test/',title:'티벗 앱 설치 방법'}]);
+const approved=linkCatalog([],[],[],[{url:'https://daonjoyful.com/test/',title:'티벗 앱 설치 방법',thumbnail:'https://daonjoyful.com/test.jpg'}]);
 assert(appendRelated('글','티벗 앱 설치 방법','new',approved).includes('daonjoyful.com/test/'));
+assert(renderBody(appendRelated('글','티벗 앱 설치 방법','new',approved)).includes('class="article-related-card"'));
+assert(!renderBody('[관련글:bad|https://evil.example/|https://daonjoyful.com/a.jpg]').includes('class="article-related-card"'));
 for (const path of ['/review/amplaza/2026-08-11/','/review/amplaza/2026-08-10/','/review/reallive/2026-08-04/','/review/notice/achim-madang-dream-stage-2026-11-11/']) {
  const item={url:'https://tvut.3678dairy.com'+path,type:'내부 글',labels:['아침마당 도전 무대 출연진'],sources:[]};
  assert.equal(eligibleRelated(item),false);
