@@ -1,8 +1,8 @@
 // Only explicit non-identifying values cross the browser/server boundary.
 export const safeTerms = ['티벗','티벗 퀴즈','티벗퀴즈','티벗 앱 설치','티벗 설치','아침마당 티벗','아침마당 티벗퀴즈','생생정보 티벗','생생정보 퀴즈','생생정보 티벗퀴즈','무엇이든 물어보세요 티벗','6시 내고향 퀴즈','6시내고향오늘퀴즈','6시내고향 오늘퀴즈'];
 const terms=new Set(['not_provided','other',...safeTerms]);
-const hosts=new Set(['not_provided','internal','other','search.naver.com','m.search.naver.com','naver.com','www.naver.com','m.naver.com','blog.naver.com','m.blog.naver.com','google.com','www.google.com','google.co.kr','www.google.co.kr','google.com.au','www.google.com.au','google.co.jp','www.google.co.jp','google.co.uk','www.google.co.uk','search.daum.net','m.search.daum.net','bing.com','www.bing.com','chatgpt.com','chat.openai.com','claude.ai','perplexity.ai','gemini.google.com','copilot.microsoft.com']);
-const sources=new Set(['not_provided','other','naver','google','daum','bing','kakao','youtube','instagram','facebook','chatgpt','direct']);
+const hosts=new Set(['not_provided','internal','other','search.naver.com','m.search.naver.com','naver.com','www.naver.com','m.naver.com','blog.naver.com','m.blog.naver.com','daonjoyful.com','www.daonjoyful.com','google.com','www.google.com','google.co.kr','www.google.co.kr','google.com.au','www.google.com.au','google.co.jp','www.google.co.jp','google.co.uk','www.google.co.uk','search.daum.net','m.search.daum.net','bing.com','www.bing.com','chatgpt.com','chat.openai.com','claude.ai','perplexity.ai','gemini.google.com','copilot.microsoft.com']);
+const sources=new Set(['not_provided','other','naver','google','daum','bing','kakao','youtube','instagram','facebook','chatgpt','direct','daonjoyful']);
 const campaigns=new Set(['not_provided','other','tvut','amplaza','reallive','whatever','sixhour']);
 const empty = {host:'not_provided',search:'not_provided',utmSource:'not_provided',utmTerm:'not_provided',campaign:'not_provided'};
 const ready = new WeakMap();
