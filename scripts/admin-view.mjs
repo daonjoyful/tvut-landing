@@ -16,7 +16,7 @@ export function loginPage(failed, changed = false) {
 }
 function workspace(title, content) {
   return documentPage(title, `<div class="workspace"><aside><div class="brand"><i aria-hidden="true">티</i>티벗 관리자</div><nav aria-label="관리 메뉴">
-    <a href="/admin/" ${title === '대시보드' ? 'aria-current="page"' : ''}>대시보드</a><a href="/admin/posts" ${title === '게시글' ? 'aria-current="page"' : ''}>게시글</a>
+    <a href="/admin/" ${title === '대시보드' ? 'aria-current="page"' : ''}>대시보드</a><a href="/admin/posts" ${title === '게시글' ? 'aria-current="page"' : ''}>게시글</a><a href="/admin/article" ${title === '새 글 작성' ? 'aria-current="page"' : ''}>원고 작성</a>
     <a href="/admin/writing-guide" ${title === '작성 지침' ? 'aria-current="page"' : ''}>작성 지침</a><a href="/admin/ai-usage" ${title === 'AI 사용량' ? 'aria-current="page"' : ''}>AI 사용량</a><a href="/admin/analytics" ${title === '방문 통계' ? 'aria-current="page"' : ''}>방문 통계</a><a href="/admin/inflows" ${title === '개별 유입 기록' ? 'aria-current="page"' : ''}>개별 유입 기록</a><a href="/admin/seo" ${title === 'SEO 진단' ? 'aria-current="page"' : ''}>SEO 진단</a><a href="/admin/indexnow" ${title === 'IndexNow' ? 'aria-current="page"' : ''}>IndexNow</a><a href="/admin/password" ${title === '비밀번호 변경' ? 'aria-current="page"' : ''}>비밀번호 변경</a></nav></aside><div><header><span>티벗 사이트 관리</span><div>
     <a href="/" target="_blank" rel="noopener">사이트 보기 ↗</a><form method="post" action="/admin/logout"><button>로그아웃</button></form></div></header>
     <main class="content"><h1>${title}</h1>${content}</main></div></div>`);
