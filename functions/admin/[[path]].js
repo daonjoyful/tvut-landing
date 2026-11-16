@@ -169,7 +169,9 @@ export async function onRequest({request,env}) {
         if(!response.ok){const error=await response.json().catch(()=>({})); const code=error?.error?.code||''; const detail=String(error?.error?.message||'').replace(/sk-[a-zA-Z0-9_-]+/g,'[비공개]').slice(0,400); const message=response.status===401?'OpenAI API 키 인증에 실패했습니다. 키가 올바른지 확인해 주세요.':response.status===429&&code==='insufficient_quota'?'OpenAI API 사용 한도 또는 결제 잔액이 부족합니다. API 계정의 결제 설정을 확인해 주세요.':response.status===429?'OpenAI API 요청 한도에 도달했습니다. 잠시 후 다시 시도해 주세요.':response.status===403?'OpenAI API 프로젝트의 모델 사용 권한을 확인해 주세요.':'AI 응답을 받지 못했습니다. (HTTP '+response.status+') '+detail;return jsonRespond({error:message},502);}
         const data=await response.json(); const text=data.output?.flatMap(item=>item.content||[]).find(item=>item.type==='output_text')?.text||''; const generated=JSON.parse(text);
         if(typeof generated.body!=='string'||!generated.body.trim()||generated.body.length>50000||typeof generated.description!=='string'||generated.description.length>300)throw Error('invalid output');
-        return jsonRespond({body:generated.body,description:generated.description});
+        const body=generated.body.replace(/^\s*#\s+[^\n]*\n+/,'').trim();
+        if(!body)throw Error('empty output');
+        return jsonRespond({body,description:generated.description});
       } catch {return jsonRespond({error:'AI 원고를 생성하지 못했습니다. 잠시 후 다시 시도해 주세요.'},502);}
     }
     if (route === '/admin/article-image-upload') {
