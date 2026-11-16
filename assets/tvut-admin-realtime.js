@@ -22,6 +22,14 @@
         var tr=document.createElement('tr'), source=document.createElement('td'),path=document.createElement('td'),views=document.createElement('td');
         source.textContent=labels[row.source] || '기타'; path.textContent=row.path; views.textContent=Number(row.views).toLocaleString('ko-KR'); tr.append(source,path,views); sourceBody.appendChild(tr);
       });
+      var chart=document.getElementById('realtime-source-chart');
+      if (chart) {
+        chart.replaceChildren();
+        var sums={}; data.rows.forEach(function(row){sums[row.source]=(sums[row.source]||0)+Number(row.views||0);});
+        var series=Object.keys(sums).sort(function(a,b){return sums[b]-sums[a];});
+        var max=Math.max.apply(null,series.map(function(key){return sums[key];}).concat([1]));
+        series.forEach(function(key){var row=document.createElement('div'),name=document.createElement('span'),track=document.createElement('i'),bar=document.createElement('b'),value=document.createElement('strong');row.className='analytics-source-row';name.textContent=labels[key]||'기타';bar.style.width=Math.round(sums[key]/max*100)+'%';track.appendChild(bar);value.textContent=Number(sums[key]).toLocaleString('ko-KR');row.append(name,track,value);chart.appendChild(row);});
+      }
       sourceStatus.textContent='마지막 확인 '+new Date(data.checkedAt).toLocaleTimeString('ko-KR',{timeZone:'Asia/Seoul',hour:'2-digit',minute:'2-digit',second:'2-digit'});
     } catch(error) { sourceStatus.textContent=(error instanceof TypeError?'유입 경로 연결에 실패했습니다.':(error.message||'유입 경로를 조회하지 못했습니다.'))+' 이전에 표시된 값은 갱신되지 않았습니다.'; }
     finally { sourcesBusy=false; }
@@ -53,3 +61,4 @@
   document.addEventListener('visibilitychange',function(){if(!document.hidden)refreshAll()});
   refreshAll(); setInterval(refreshAll,60000);
 })();
+
