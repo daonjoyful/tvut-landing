@@ -2,6 +2,7 @@ import credential from './credential.json';
 import entries from './catalog.json';
 import {loginPage, dashboardPage, postsPage, analyticsPage, passwordPage, seoPage, indexNowPage, articleEditor, staticEditor, inflowsPage, writingGuidePage} from '../../scripts/admin-view.mjs';
 import {defaultGuide} from '../../scripts/admin-writing-guide.mjs';
+import {contentPrompt, keywordPrompt} from '../../scripts/admin-prompts.mjs';
 import {fetchAnalytics} from '../../scripts/admin-analytics.mjs';
 import {fetchSearch} from '../../scripts/admin-search.mjs';
 import {saveNaverReport, readNaverReport} from '../../scripts/admin-naver.mjs';
@@ -95,6 +96,12 @@ async function getWritingGuide(db) {
   await db.prepare('CREATE TABLE IF NOT EXISTS admin_writing_guide (id INTEGER PRIMARY KEY, guide TEXT NOT NULL, updated TEXT NOT NULL)').run();
   return (await db.prepare('SELECT guide,updated FROM admin_writing_guide WHERE id=1').first()) || {guide:defaultGuide,updated:''};
 }
+async function getPrompts(db) {
+  await getWritingGuide(db);
+  const result = await db.prepare('SELECT id,guide,updated FROM admin_writing_guide WHERE id IN (2,3)').all();
+  const rows = Object.fromEntries(result.results.map(row => [row.id, row]));
+  return {content: rows[2] || {guide:contentPrompt,updated:''}, keyword: rows[3] || {guide:keywordPrompt,updated:''}};
+}
 async function loginForm(request, limit = 1024) {
   const reader = request.body?.getReader();
   if (!reader) return new URLSearchParams();
@@ -153,8 +160,9 @@ export async function onRequest({request,env}) {
     if (route === '/admin/writing-guide') {
       if (!await signedIn(request,record)) return redirect('/admin/');
       const guide = (form.get('guide') || '').trim();
-      if (!guide || guide.length > 30000) return respond(writingGuidePage(guide,'','지침은 1자 이상 30,000자 이하로 입력해 주세요.'),400);
-      try { await getWritingGuide(env.TVUT_ADMIN_DB); await env.TVUT_ADMIN_DB.prepare('INSERT INTO admin_writing_guide(id,guide,updated) VALUES(1,?,?) ON CONFLICT(id) DO UPDATE SET guide=excluded.guide,updated=excluded.updated').bind(guide,new Date().toISOString()).run(); }
+      const id = {base:1,content:2,keyword:3}[form.get('kind') || 'base'];
+      if (!id || !guide || guide.length > 30000) return respond('지침은 1자 이상 30,000자 이하로 입력해 주세요.',400);
+      try { await getWritingGuide(env.TVUT_ADMIN_DB); await env.TVUT_ADMIN_DB.prepare('INSERT INTO admin_writing_guide(id,guide,updated) VALUES(?,?,?) ON CONFLICT(id) DO UPDATE SET guide=excluded.guide,updated=excluded.updated').bind(id,guide,new Date().toISOString()).run(); }
       catch { return respond('작성 지침을 저장하지 못했습니다.',503); }
       return redirect('/admin/writing-guide?saved=1');
     }
@@ -241,7 +249,7 @@ export async function onRequest({request,env}) {
   if (request.method === 'HEAD') return respond(null);
   if (!authenticated) return respond(loginPage(false,url.searchParams.get('password') === 'changed'));
   if (route === '/admin/writing-guide' || route === '/admin/writing-guide-download') {
-    try { const saved=await getWritingGuide(env.TVUT_ADMIN_DB); if (route.endsWith('-download')) return new Response(saved.guide,{headers:{'Content-Type':'text/plain; charset=utf-8','Content-Disposition':'attachment; filename="tvut-writing-guide.txt"','Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'}}); return respond(writingGuidePage(saved.guide,saved.updated,url.searchParams.has('saved')?'작성 지침을 저장했습니다.':'')); }
+    try { const saved=await getWritingGuide(env.TVUT_ADMIN_DB); const prompts=await getPrompts(env.TVUT_ADMIN_DB); if (route.endsWith('-download')) { const kind=url.searchParams.get('kind'); const value=kind==='content'?prompts.content.guide:kind==='keyword'?prompts.keyword.guide:saved.guide; return new Response(value,{headers:{'Content-Type':'text/plain; charset=utf-8','Content-Disposition':'attachment; filename="tvut-writing-guide.txt"','Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'}}); } return respond(writingGuidePage(saved.guide,saved.updated,url.searchParams.has('saved')?'저장했습니다.':'',prompts)); }
     catch { return respond('작성 지침을 불러오지 못했습니다.',503); }
   }
   if (route === '/admin/password') return respond(passwordPage());
