@@ -21,5 +21,5 @@ export function relatedLinks(title,slug,links){
 export function appendRelated(body,title,slug,links){
   const picks=relatedLinks(title,slug,links.filter(item=>item.thumbnail&&!body.includes(item.url)&&!body.includes(new URL(item.url).pathname)));
   if(!picks.length)return body;
-  return body.trimEnd()+'\n\n## 함께 읽을 글\n\n'+picks.map(item=>'[관련글:'+item.labels[0].replace(/[\[\]|]/g,'')+'|'+item.url+'|'+item.thumbnail+']').join('\n');
+  return body.trimEnd()+'\n\n## 함께 보면 유용한 글\n\n'+picks.map(item=>'[관련글:'+item.labels[0].replace(/[\[\]|]/g,'')+'|'+item.url+'|'+item.thumbnail+']').join('\n');
 }

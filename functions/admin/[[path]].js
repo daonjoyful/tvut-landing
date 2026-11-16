@@ -4,6 +4,8 @@ import staticLinks from './link-inventory.json';
 import relatedArticles from './related-articles.json';
 import {linkCatalog,appendRelated} from '../../scripts/admin-links.mjs';
 import {linksPage} from '../../scripts/admin-view.mjs';
+import {generationHistoryPage} from '../../scripts/admin-view.mjs';
+import {recordGeneration,generationHistory,generationDetail} from '../../scripts/admin-generation-history.mjs';
 import {loginPage, dashboardPage, postsPage, analyticsPage, passwordPage, seoPage, indexNowPage, indexingPage, articleEditor, staticEditor, inflowsPage, writingGuidePage, aiUsagePage} from '../../scripts/admin-view.mjs';
 import {recordAiUsage,readAiUsage,readExchangeRate} from '../../scripts/admin-ai-usage.mjs';
 import {saveIndexHistory,readIndexHistory,koreaDate} from '../../scripts/admin-index-history.mjs';
@@ -182,6 +184,7 @@ export async function onRequest({request,env}) {
         if(typeof generated.body!=='string'||!generated.body.trim()||generated.body.length>50000||typeof generated.description!=='string'||generated.description.length>300)throw Error('invalid output');
         const body=generated.body.replace(/^\s*#\s+[^\n]*\n+/,'').trim();
         if(!body)throw Error('empty output');
+        try {await recordGeneration(env.TVUT_ADMIN_DB,title,generated.description,body);} catch {usageWarning+=' 생성 이력을 저장하지 못했습니다. 원고를 임시저장해 주세요.';}
         return jsonRespond({body,description:generated.description,usageWarning});
       } catch {return jsonRespond({error:'AI 원고를 생성하지 못했습니다. 잠시 후 다시 시도해 주세요.'},502);}
     }
@@ -280,7 +283,7 @@ export async function onRequest({request,env}) {
     return redirect('/admin/', sessionCookie(token, lifetime));
   }
   if (request.method !== 'GET' && request.method !== 'HEAD') return respond(null, 405, {Allow:'GET, HEAD, POST'});
-  if (!['/admin', '/admin/login', '/admin/posts', '/admin/analytics', '/admin/password','/admin/seo','/admin/indexnow','/admin/indexing','/admin/article','/admin/article-preview','/admin/article-image','/admin/ai-usage','/admin/static-edit','/admin/static-preview','/admin/realtime-data','/admin/realtime-sources-data','/admin/inflows','/admin/inflows-data','/admin/writing-guide','/admin/writing-guide-download','/admin/links'].includes(route)) return respond('페이지를 찾을 수 없습니다.', 404);
+  if (!['/admin', '/admin/login', '/admin/posts', '/admin/history', '/admin/analytics', '/admin/password','/admin/seo','/admin/indexnow','/admin/indexing','/admin/article','/admin/article-preview','/admin/article-image','/admin/ai-usage','/admin/static-edit','/admin/static-preview','/admin/realtime-data','/admin/realtime-sources-data','/admin/inflows','/admin/inflows-data','/admin/writing-guide','/admin/writing-guide-download','/admin/links'].includes(route)) return respond('페이지를 찾을 수 없습니다.', 404);
   let record;
   try { record = await currentCredential(env); }
   catch { return ['/admin/realtime-data','/admin/realtime-sources-data','/admin/inflows-data'].includes(route) ? jsonRespond({error:'관리자 인증 저장소에 연결할 수 없습니다.'},503) : respond('관리자 인증 저장소에 연결할 수 없습니다.',503); }
@@ -305,7 +308,7 @@ export async function onRequest({request,env}) {
     try { return jsonRespond(await readEvents(env.TVUT_ADMIN_DB,{source,path})); }
     catch { return jsonRespond({error:'유입 기록을 불러오지 못했습니다.'},503); }
   }
-  if (!authenticated && ['/admin/posts','/admin/analytics','/admin/password','/admin/seo','/admin/indexnow','/admin/indexing','/admin/article','/admin/article-preview','/admin/article-image','/admin/ai-usage','/admin/static-edit','/admin/static-preview','/admin/inflows','/admin/writing-guide','/admin/writing-guide-download','/admin/links'].includes(route)) return redirect('/admin/');
+  if (!authenticated && ['/admin/posts','/admin/history','/admin/analytics','/admin/password','/admin/seo','/admin/indexnow','/admin/indexing','/admin/article','/admin/article-preview','/admin/article-image','/admin/ai-usage','/admin/static-edit','/admin/static-preview','/admin/inflows','/admin/writing-guide','/admin/writing-guide-download','/admin/links'].includes(route)) return redirect('/admin/');
   if(route==='/admin/links') {try{return respond(linksPage(await allLinks(env)));}catch{return respond('링크 목록을 불러오지 못했습니다.',503);}}
   if(route==='/admin/article-image') {
     const id=url.searchParams.get('id')||'';
@@ -314,6 +317,7 @@ export async function onRequest({request,env}) {
   }
   if (request.method === 'HEAD') return respond(null);
   if (!authenticated) return respond(loginPage(false,url.searchParams.get('password') === 'changed'));
+  if(route==='/admin/history') {try {const id=url.searchParams.get('id');if(id){const detail=await generationDetail(env.TVUT_ADMIN_DB,id);return detail?respond(generationHistoryPage([],[],detail)):respond('생성 이력을 찾을 수 없습니다.',404);}const [history,articles,usage]=await Promise.all([generationHistory(env.TVUT_ADMIN_DB),articleList(env.TVUT_ADMIN_DB),readAiUsage(env.TVUT_ADMIN_DB)]);return respond(generationHistoryPage(history,articles,null,usage.details));}catch{return respond('생성 이력을 불러오지 못했습니다.',503);}}
   if(route==='/admin/indexing') {const engine=url.searchParams.get('engine')||'';if(!['naver','google','bing'].includes(engine))return respond('검색엔진을 확인해 주세요.',400);try{return respond(indexingPage(engine,await searchableEntries(env),'/',null,'',await readIndexHistory(env.TVUT_ADMIN_DB,engine),koreaDate(),url.searchParams.has('saved')));}catch{return respond('공개 페이지 목록을 불러오지 못했습니다.',503);}}
   if(route==='/admin/ai-usage') {try {const [usage,exchange]=await Promise.all([readAiUsage(env.TVUT_ADMIN_DB),readExchangeRate(env.TVUT_ADMIN_DB).catch(()=>null)]);return respond(aiUsagePage(usage,exchange));} catch {return respond('AI 사용량을 불러오지 못했습니다.',503);}}
   if (route === '/admin/writing-guide' || route === '/admin/writing-guide-download') {
