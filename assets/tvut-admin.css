@@ -64,3 +64,5 @@ input,.workspace textarea,.workspace select{border-color:#d3dfec;border-radius:9
 .workspace .entries li+li,.workspace .source-realtime,.workspace .article-actions{border-color:#e8edf5}
 .login .brand i{background:#e9f2ff;color:#1b61bc}
 @media(max-width:760px){.workspace .content{padding-left:16px;padding-right:16px}.workspace .table-wrap{max-width:100%}}
+
+.workspace a.primary,.workspace .heading a.primary{color:#fff}
