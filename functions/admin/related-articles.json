@@ -1,10 +1,42 @@
 [
-  {"url":"https://daonjoyful.com/kbs-%ed%8b%b0%eb%b2%97-%ec%95%b1-%ec%82%ac%ec%9a%a9%eb%b0%a9%eb%b2%95-%eb%b0%8f-%ec%84%a4%ec%b9%98-%eb%b0%8f-%ed%98%9c%ed%83%9d%ec%95%88%eb%82%b4/","title":"KBS 티벗 앱 사용방법 및 설치 및 혜택안내"},
-  {"url":"https://daonjoyful.com/%ec%95%84%ec%b9%a8%eb%a7%88%eb%8b%b9-%eb%8f%8c%eb%b0%9c%ed%80%b4%ec%a6%88-%ec%b0%b8%ec%97%ac%eb%b0%a9%eb%b2%95-%ed%8b%b0%eb%b2%97-%ec%95%b1-%ec%84%a4%ec%b9%98-%eb%b0%8f-%ea%b0%80%ec%9e%85%eb%b0%a9/","title":"아침마당 돌발퀴즈 참여방법과 티벗 앱 설치·가입"},
-  {"url":"https://daonjoyful.com/ask-me-anything-quiz/","title":"무엇이든 물어보세요 티벗 퀴즈 참여 안내"},
-  {"url":"https://daonjoyful.com/surprise-quiz/","title":"생생정보 깜짝퀴즈 참여방법 KBS 2TV"},
-  {"url":"https://daonjoyful.com/the-tvut-quiz/","title":"티벗 퀴즈 참여 방법과 요일별 팁"},
-  {"url":"https://daonjoyful.com/2tv-saengsaeng-info/","title":"2TV 생생정보 다시보기와 깜짝퀴즈 참여 방법"},
-  {"url":"https://daonjoyful.com/2026-%EC%95%84%EC%B9%A8%EB%A7%88%EB%8B%B9-%EA%B0%9C%ED%8E%B8-%ED%8B%B0%EB%B2%97-%ED%80%B4%EC%A6%88-%EC%B0%B8%EC%97%AC-%EB%B0%A9%EB%B2%95-%EB%B0%8F-%EC%9A%94%EC%9D%BC%EB%B3%84-%EC%B6%9C%EC%97%B0","title":"2026 아침마당 개편·티벗 퀴즈 참여와 요일별 출연"},
-  {"url":"https://daonjoyful.com/kbs-6myhometown-quiz-event-guide/","title":"6시 내고향 퀴즈 참여와 공식 채널 안내"}
+  {
+    "url": "https://daonjoyful.com/kbs-%ed%8b%b0%eb%b2%97-%ec%95%b1-%ec%82%ac%ec%9a%a9%eb%b0%a9%eb%b2%95-%eb%b0%8f-%ec%84%a4%ec%b9%98-%eb%b0%8f-%ed%98%9c%ed%83%9d%ec%95%88%eb%82%b4/",
+    "title": "KBS 티벗 앱 사용방법 및 설치 및 혜택안내",
+    "publishedDate": "2025-07-04"
+  },
+  {
+    "url": "https://daonjoyful.com/%ec%95%84%ec%b9%a8%eb%a7%88%eb%8b%b9-%eb%8f%8c%eb%b0%9c%ed%80%b4%ec%a6%88-%ec%b0%b8%ec%97%ac%eb%b0%a9%eb%b2%95-%ed%8b%b0%eb%b2%97-%ec%95%b1-%ec%84%a4%ec%b9%98-%eb%b0%8f-%ea%b0%80%ec%9e%85%eb%b0%a9/",
+    "title": "아침마당 돌발퀴즈 참여방법과 티벗 앱 설치·가입",
+    "publishedDate": "2025-08-09"
+  },
+  {
+    "url": "https://daonjoyful.com/ask-me-anything-quiz/",
+    "title": "무엇이든 물어보세요 티벗 퀴즈 참여 안내",
+    "publishedDate": "2025-08-25"
+  },
+  {
+    "url": "https://daonjoyful.com/surprise-quiz/",
+    "title": "생생정보 깜짝퀴즈 참여방법 KBS 2TV",
+    "publishedDate": "2025-09-07"
+  },
+  {
+    "url": "https://daonjoyful.com/the-tvut-quiz/",
+    "title": "티벗 퀴즈 참여 방법과 요일별 팁",
+    "publishedDate": "2025-10-09"
+  },
+  {
+    "url": "https://daonjoyful.com/2tv-saengsaeng-info/",
+    "title": "2TV 생생정보 다시보기와 깜짝퀴즈 참여 방법",
+    "publishedDate": "2025-10-27"
+  },
+  {
+    "url": "https://daonjoyful.com/2026-%EC%95%84%EC%B9%A8%EB%A7%88%EB%8B%B9-%EA%B0%9C%ED%8E%B8-%ED%8B%B0%EB%B2%97-%ED%80%B4%EC%A6%88-%EC%B0%B8%EC%97%AC-%EB%B0%A9%EB%B2%95-%EB%B0%8F-%EC%9A%94%EC%9D%BC%EB%B3%84-%EC%B6%9C%EC%97%B0",
+    "title": "2026 아침마당 개편·티벗 퀴즈 참여와 요일별 출연",
+    "publishedDate": "2026-03-24"
+  },
+  {
+    "url": "https://daonjoyful.com/kbs-6myhometown-quiz-event-guide/",
+    "title": "6시 내고향 퀴즈 참여와 공식 채널 안내",
+    "publishedDate": "2026-08-22"
+  }
 ]

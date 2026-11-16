@@ -1,11 +1,11 @@
 import {trafficReport} from './admin-traffic.mjs';
-import {eligibleRelated} from './admin-links.mjs';
+import {eligibleRelated,excludedLink} from './admin-links.mjs';
 const analytics = 'https://analytics.google.com/analytics/web/#/a383407073p562387220/reports/intelligenthome';
 function escape(value) {
   return String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 }
 function documentPage(title, body) {
-  return '<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex,nofollow"><link rel="stylesheet" href="/assets/tvut-admin.css"><title>' + title + ' · 티벗 관리자</title></head><body>' + body + '</body></html>';
+  return '<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex,nofollow"><link rel="stylesheet" href="/assets/tvut-admin.css?v=links-date-1"><title>' + title + ' · 티벗 관리자</title></head><body>' + body + '</body></html>';
 }
 export function loginPage(failed, changed = false) {
   return documentPage('로그인', `<main class="login"><section class="login-card"><div class="brand"><i aria-hidden="true">티</i>티벗 운영</div>
@@ -23,10 +23,11 @@ function workspace(title, content) {
     <main class="content"><h1>${title}</h1>${content}</main></div></div>`);
 }
 export function linksPage(links){
+ links=links.filter(x=>!excludedLink(x));
  const related=links.filter(eligibleRelated);
- const table=items=>items.map(x=>`<tr><td>${escape(x.labels[0]||'제목 없음')}</td><td><a href="${escape(x.url)}" target="_blank" rel="noopener noreferrer">${escape(x.url)}</a></td></tr>`).join('');
+ const table=items=>items.map(x=>`<tr><td>${escape(x.labels[0]||'제목 없음')}</td><td><a href="${escape(x.url)}" target="_blank" rel="noopener noreferrer">${escape(x.url)}</a></td><td>${escape(x.date||'미확인')}</td></tr>`).join('');
  const rows=links.map(x=>`<tr><td>${escape(x.labels.join(' · ')||'표시 문구 없음')}</td><td><a href="${escape(x.url)}" target="_blank" rel="noopener noreferrer">${escape(x.url)}</a></td><td>${escape(x.type)}</td><td>${escape(x.sources.join(', '))}</td></tr>`).join('');
- return workspace('링크 목록',`<section class="panel"><h2>신규 글 연결용 관련 글</h2><p>직접 지정한 글과 공개된 티벗 글입니다. 새 글을 처음 임시저장할 때 주제가 일치하는 글만 최대 2개 연결합니다. 자동 연결 결과는 발행 전에 검토할 수 있습니다.</p><h3>다온조이풀 관련 글 (${related.filter(x=>x.sources.includes('운영자 제공 관련 글')).length}개)</h3><div class="table-wrap"><table><thead><tr><th>제목</th><th>URL</th></tr></thead><tbody>${table(related.filter(x=>x.sources.includes('운영자 제공 관련 글')))}</tbody></table></div><h3>공개된 티벗 글 (${related.filter(x=>x.type==='내부 글').length}개)</h3><div class="table-wrap"><table><thead><tr><th>제목</th><th>URL</th></tr></thead><tbody>${table(related.filter(x=>x.type==='내부 글'))}</tbody></table></div></section><section class="panel"><details><summary>사이트에서 발견된 전체 링크 ${links.length}개 보기</summary><p>정적 원본, 현재 발행 글, 오늘 방송정보 API 링크를 합친 목록입니다. 방송정보 API가 일시적으로 응답하지 않거나 다른 스크립트가 링크를 생성할 때 목록에서 빠질 수 있습니다. 주소 접속 여부는 자동 검사하지 않습니다.</p><div class="table-wrap"><table><thead><tr><th>표시 문구</th><th>연결 주소</th><th>종류</th><th>발견 위치</th></tr></thead><tbody>${rows}</tbody></table></div></details></section>`);
+ return workspace('링크 목록',`<section class="panel"><h2>신규 글 연결용 관련 글</h2><p>직접 지정한 글과 공개된 티벗 글입니다. 새 글을 처음 임시저장할 때 주제가 일치하는 글만 최대 2개 연결합니다. 자동 연결 결과는 발행 전에 검토할 수 있습니다.</p><p>작성·발행일은 다온조이풀 글의 최초 작성일과 티벗 관리자 글의 최근 발행일을 표시합니다. 날짜를 확인할 수 없는 페이지는 미확인으로 표시합니다.</p><h3>다온조이풀 관련 글 (${related.filter(x=>x.sources.includes('운영자 제공 관련 글')).length}개)</h3><div class="table-wrap related-links-table"><table><thead><tr><th>제목</th><th>URL</th><th>작성·발행일</th></tr></thead><tbody>${table(related.filter(x=>x.sources.includes('운영자 제공 관련 글')))}</tbody></table></div><h3>공개된 티벗 글 (${related.filter(x=>x.type==='내부 글').length}개)</h3><div class="table-wrap related-links-table"><table><thead><tr><th>제목</th><th>URL</th><th>작성·발행일</th></tr></thead><tbody>${table(related.filter(x=>x.type==='내부 글'))}</tbody></table></div></section><section class="panel"><details><summary>사이트에서 발견된 전체 링크 ${links.length}개 보기</summary><p>정적 원본, 현재 발행 글, 오늘 방송정보 API 링크를 합친 목록입니다. 방송정보 API가 일시적으로 응답하지 않거나 다른 스크립트가 링크를 생성할 때 목록에서 빠질 수 있습니다. 주소 접속 여부는 자동 검사하지 않습니다.</p><div class="table-wrap"><table><thead><tr><th>표시 문구</th><th>연결 주소</th><th>종류</th><th>발견 위치</th></tr></thead><tbody>${rows}</tbody></table></div></details></section>`);
 }
 export function passwordPage(error = '') {
   return workspace('비밀번호 변경', `<section class="panel password-settings"><form action="/admin/password" method="post">

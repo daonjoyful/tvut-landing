@@ -1,14 +1,16 @@
 const origin='https://tvut.3678dairy.com';
 const categories=[['아침마당',/아침\s*마당|amplaza/i],['생생정보',/생생\s*정보|reallive/i],['무엇이든 물어보세요',/무엇이든\s*물어보세요|whatever/i],['6시 내고향',/6\s*시\s*내\s*고향|sixhour/i],['티벗 설치·이용',/티벗|tvut/i]];
 export function category(text){return categories.find(([,re])=>re.test(text||''))?.[0]||'기타';}
-export function eligibleRelated(item){return item.type==='내부 글'||item.sources.includes('운영자 제공 관련 글');}
+const excludedPaths=new Set(['/review/amplaza/2026-08-11/','/review/amplaza/2026-08-10/','/review/reallive/2026-08-04/','/review/notice/achim-madang-dream-stage-2026-11-11/']);
+export function excludedLink(item){try{const u=new URL(item.url,origin);return u.origin===origin&&excludedPaths.has(u.pathname);}catch{return true;}}
+export function eligibleRelated(item){return !excludedLink(item)&&(item.type==='내부 글'||item.sources.includes('운영자 제공 관련 글'));}
 export function linkCatalog(staticLinks,entries,articles,curated=[]){
   const result=new Map();
   const add=(url,label,source,type)=>{try{let u=new URL(url,origin);if(!['http:','https:','tel:','mailto:'].includes(u.protocol))return;const key=u.href.replace(/%[0-9a-f]{2}/gi,x=>x.toUpperCase());let item=result.get(key);if(!item){item={url:key,labels:[],sources:[],type};result.set(key,item);}if(type==='내부 글'||type==='관련 글'){item.type=type;if(label){item.labels=item.labels.filter(x=>x!==label);item.labels.unshift(label);}}else if(label&&!item.labels.includes(label))item.labels.push(label);if(source&&!item.sources.includes(source))item.sources.push(source);}catch{}};
   for(const row of staticLinks)for(const source of row.sources)for(const label of row.labels.length?row.labels:[''])add(row.url,label,source,'정적 페이지');
-  for(const row of curated)add(row.url,row.title,'운영자 제공 관련 글','관련 글');
+  for(const row of curated){add(row.url,row.title,'운영자 제공 관련 글','관련 글');const key=new URL(row.url,origin).href.replace(/%[0-9a-f]{2}/gi,x=>x.toUpperCase());if(result.has(key))result.get(key).date=row.publishedDate||'';}
   for(const row of entries)add(row.url,row.title,'공개 페이지 목록','내부 글');
-  for(const row of articles){if(!row.published)continue;let a;try{a=JSON.parse(row.published);}catch{continue;}const source='/review/notice/'+row.slug+'/';add(source,a.title,source,'내부 글');if(a.buttonUrl)add(a.buttonUrl,a.buttonLabel,source,'발행 글');for(const match of (a.body||'').matchAll(/\[([^\]\n]+)\]\((https?:\/\/[^\s)]+|\/(?!\/)[^\s)]*)\)/g))add(match[2],match[1],source,'발행 글');}
+  for(const row of articles){if(!row.published)continue;let a;try{a=JSON.parse(row.published);}catch{continue;}const source='/review/notice/'+row.slug+'/';add(source,a.title,source,'내부 글');const item=result.get(new URL(source,origin).href);if(item&&row.published_at){const d=new Date(row.published_at);if(!Number.isNaN(d.valueOf()))item.date=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).format(d);}if(a.buttonUrl)add(a.buttonUrl,a.buttonLabel,source,'발행 글');for(const match of (a.body||'').matchAll(/\[([^\]\n]+)\]\((https?:\/\/[^\s)]+|\/(?!\/)[^\s)]*)\)/g))add(match[2],match[1],source,'발행 글');}
   return [...result.values()];
 }
 export function relatedLinks(title,slug,links){
