@@ -68,3 +68,6 @@ input,.workspace textarea,.workspace select{border-color:#d3dfec;border-radius:9
 .workspace a.primary,.workspace .heading a.primary{color:#fff}
 
 .workspace .entries a>span:last-child,.workspace .realtime-panel .heading button{flex:none;white-space:nowrap}
+
+.workspace .ai-usage-chart rect{fill:#8db5e7}
+@media(max-width:650px){.workspace .ai-usage-cards{grid-template-columns:1fr}.workspace .ai-usage-section table{min-width:760px}}
